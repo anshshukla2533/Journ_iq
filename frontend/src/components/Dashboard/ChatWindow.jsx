@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { createSocket } from '../../services/socket';
 import useAuth from '../../hooks/useAuth';
+import notesService from '../../services/notesService';
 import IncomingCallModal from './IncomingCallModal';
 import CallOverlay from './CallOverlay';
 
@@ -127,10 +128,15 @@ const ChatWindow = ({ friend, onClose }) => {
     };
 
     const fetchNotes = async () => {
-      const res = await axios.get('/api/notes', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setNotes(res.data.data || res.data);
+      if (!token) return;
+      try {
+        const res = await notesService.getNotes(token);
+        if (res.success) setNotes(res.data || []);
+        else setNotes([]);
+      } catch (err) {
+        console.error('Failed to fetch notes:', err);
+        setNotes([]);
+      }
     };
 
     const sendMessage = () => {

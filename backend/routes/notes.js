@@ -7,19 +7,31 @@ const router = express.Router();
 router.get('/search', protect, async (req, res) => {
   try {
     const { q } = req.query;
+
     if (!q || q.trim() === '') {
-      return res.status(400).json({ success: false, msg: 'Search query is required', data: [] });
-    
+      return res.status(400).json({ 
+        success: false, 
+        msg: 'Search query is required', 
+        data: [] 
+      });
+    } // <-- closing brace added here
+
     const notes = await Note.find({
       owner: req.user._id,
       text: { $regex: q, $options: 'i' }
     }).sort({ createdAt: -1 });
+
     res.json({ success: true, msg: 'Notes found', data: notes });
   } catch (error) {
     console.error('Error searching notes:', error);
-    res.status(500).json({ success: false, msg: 'Server error while searching notes', data: [] });
+    res.status(500).json({ 
+      success: false, 
+      msg: 'Server error while searching notes', 
+      data: [] 
+    });
   }
 });
+
 
 // GET /api/notes - Get all notes
 // Get all notes for the logged-in user

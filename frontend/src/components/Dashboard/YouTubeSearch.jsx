@@ -2,7 +2,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { searchYouTube } from '../../services/youtubeService';
 import useAuth from '../../hooks/useAuth';
-import notesService from '../../services/notesService';
 
 const YouTubeSearch = () => {
   const { token } = useAuth();
@@ -11,8 +10,7 @@ const YouTubeSearch = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedVideo, setSelectedVideo] = useState(null);
-  const [note, setNote] = useState('');
-  const [saveMsg, setSaveMsg] = useState('');
+  
   
   const [pos, setPos] = useState({ x: window.innerWidth / 2 - 200, y: window.innerHeight - 200 });
   const [dragging, setDragging] = useState(false);
@@ -58,19 +56,7 @@ const YouTubeSearch = () => {
     setLoading(false);
   };
 
-  const handleSaveNote = async () => {
-    if (!note.trim() || !selectedVideo) return;
-    setSaveMsg('');
-    try {
-      const res = await notesService.createNote(token, { text: note + ` (YouTube: ${selectedVideo.title})` });
-      if (!res.success) throw new Error('Failed to save note');
-      setSaveMsg('Note saved!');
-      setNote('');
-      setTimeout(() => setSaveMsg(''), 2000);
-    } catch {
-      setSaveMsg('Failed to save note.');
-    }
-  };
+  // Note saving is handled via the draggable Save Note widget on the Dashboard
 
   return (
     <div className="bg-gradient-to-br from-red-100 to-white dark:from-gray-900 dark:to-gray-800 rounded-3xl shadow-2xl p-4 md:p-8 w-full max-w-6xl mx-auto mt-10 border border-red-200 dark:border-gray-700">
@@ -146,6 +132,7 @@ const YouTubeSearch = () => {
             />
           ))}
         </div>
+        {/* Note saving is done via the draggable 'Save a Note' widget in the Dashboard. */}
         {/* Removed draggable floating note input to avoid duplicate note widgets. */}
       </div>
     </div>

@@ -11,6 +11,8 @@ import YouTubeSearch from './YouTubeSearch';
 import ToDoSidebar from './ToDoSidebar';
 import FriendsSidebar from './FriendsSidebar';
 import ChatWindow from './ChatWindow';
+import useAuth from '../../hooks/useAuth';
+import notesService from '../../services/notesService';
 
 
 const TABS = [
@@ -64,9 +66,11 @@ const DashboardPage = ({
   // Draggable Save Note widget state (moved to DraggableSaveNote component)
 // Draggable Save Note widget component
 const DraggableSaveNote = () => {
+  const { token } = useAuth();
   const [show, setShow] = useState(true);
   const [note, setNote] = useState('');
   const [saveMsg, setSaveMsg] = useState('');
+  const [saving, setSaving] = useState(false);
   const [pos, setPos] = useState({ x: window.innerWidth / 2 - 200, y: window.innerHeight - 200 });
   const [dragging, setDragging] = useState(false);
   const dragOffset = useRef({ x: 0, y: 0 });
@@ -90,20 +94,23 @@ const DraggableSaveNote = () => {
   }, [dragging]);
 
   const handleSaveNote = async () => {
-    if (!note.trim()) return;
+    if (!note.trim() || !token) return;
     setSaveMsg('');
+    setSaving(true);
     try {
-      await fetch('/api/notes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: note }),
-      });
-      setSaveMsg('Note saved!');
-      setNote('');
-      setTimeout(() => setSaveMsg(''), 2000);
-    } catch {
+      const res = await notesService.createNote(token, { text: note });
+      if (res.success) {
+        setSaveMsg('Note saved!');
+        setNote('');
+        setTimeout(() => setSaveMsg(''), 2000);
+      } else {
+        setSaveMsg(res.message || 'Failed to save note.');
+      }
+    } catch (err) {
+      console.error('Error saving note:', err);
       setSaveMsg('Failed to save note.');
     }
+    setSaving(false);
   };
 
   if (!show) return null;

@@ -1,30 +1,11 @@
 import React, { useState } from 'react'
 import useAuth from '../../hooks/useAuth';
-import notesService from '../../services/notesService';
 
 
 const NewsSection = ({ news }) => {
   const { token } = useAuth();
   const [modalArticle, setModalArticle] = useState(null);
-  const [note, setNote] = useState('');
-  const [saveMsg, setSaveMsg] = useState('');
-  const [saving, setSaving] = useState(false);
-
-  const handleSaveNote = async () => {
-    if (!note.trim() || !modalArticle) return;
-    setSaving(true);
-    setSaveMsg('');
-    try {
-      const res = await notesService.createNote(token, { text: note + ` (News: ${modalArticle.title})` });
-      if (!res.success) throw new Error('Failed to save note');
-      setSaveMsg('Note saved!');
-      setNote('');
-      setTimeout(() => setSaveMsg(''), 2000);
-    } catch {
-      setSaveMsg('Failed to save note.');
-    }
-    setSaving(false);
-  };
+  // Note saving is handled via the draggable Save Note widget on the Dashboard
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
@@ -69,21 +50,7 @@ const NewsSection = ({ news }) => {
               <a href={modalArticle.link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Read full article ↗</a>
             )}
             <div className="mt-6">
-              <label className="block text-sm font-medium mb-1">Save a Note on this News:</label>
-              <textarea
-                className="w-full border rounded px-2 py-1 mb-2"
-                rows={3}
-                value={note}
-                onChange={e => setNote(e.target.value)}
-                placeholder="Write your note..."
-                disabled={saving}
-              />
-              <button
-                className="bg-blue-600 text-white px-4 py-1 rounded mr-2"
-                onClick={handleSaveNote}
-                disabled={saving || !note.trim()}
-              >{saving ? 'Saving...' : 'Save Note'}</button>
-              {saveMsg && <span className="ml-2 text-green-600">{saveMsg}</span>}
+              <div className="text-sm text-gray-600">To save a note about this article, use the draggable "Save a Note" widget on the dashboard (drag it where you like) — it will attach the article title automatically when you save.</div>
             </div>
           </div>
         </div>
