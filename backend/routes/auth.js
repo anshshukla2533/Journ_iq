@@ -1,5 +1,6 @@
 import express from 'express'
 import { body } from 'express-validator'
+import jwt from 'jsonwebtoken'
 import {
   registerUser,
   loginUser,
@@ -13,19 +14,51 @@ const router = express.Router()
 
 // Frontend login route
 router.get('/login', (req, res) => {
-  res.redirect('http://localhost:3000/login');
+  res.redirect('http://localhost:5173/login');
 });
 
 // Google OAuth
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-router.get('/google/callback', passport.authenticate('google', { failureRedirect: '/login', session: true }), (req, res) => {
-  res.redirect('http://localhost:3000/dashboard');
-});
+router.get('/google', passport.authenticate('google', { 
+  scope: ['profile', 'email'],
+  prompt: 'select_account'
+}));
+
+router.get('/google/callback', 
+  passport.authenticate('google', { 
+    failureRedirect: 'http://localhost:5173/login',
+    session: true 
+  }), 
+  (req, res) => {
+    // Generate JWT token here if you're using JWT
+    const token = jwt.sign(
+      { id: req.user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN }
+    );
+    
+    // Redirect to frontend callback route with token
+    res.redirect(`http://localhost:5173/auth/callback?token=${token}`);
+  });
 
 // GitHub OAuth
-router.get('/github/callback', passport.authenticate('github', { failureRedirect: '/login', session: true }), (req, res) => {
-  res.redirect('http://localhost:3000/dashboard');
-});
+router.get('/github/callback', 
+  passport.authenticate('github', { 
+    failureRedirect: 'http://localhost:5173/login', 
+    session: true 
+  }), 
+  (req, res) => {
+    try {
+      const token = jwt.sign(
+        { id: req.user._id },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRES_IN }
+      );
+      res.redirect(`http://localhost:5173/dashboard?token=${token}`);
+    } catch (error) {
+      console.error('Auth callback error:', error);
+      res.redirect('http://localhost:5173/login?error=auth_failed');
+    }
+  });
 
 
 // Validation rules

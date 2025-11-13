@@ -1,12 +1,14 @@
 import express from 'express';
 import Note from '../models/Note.js';
+import protect from '../middleware/protectRoute.js';
 
 const router = express.Router();
 
-// GET /api/timeline - Get notes grouped by date (timeline view)
-router.get('/', async (req, res) => {
+// GET /api/timeline - Get notes grouped by date (timeline view) - PRIVATE
+router.get('/', protect, async (req, res) => {
   try {
-    const notes = await Note.find({}).sort({ createdAt: -1 });
+    // Only return notes owned by the authenticated user
+    const notes = await Note.find({ owner: req.user._id, isArchived: false }).sort({ createdAt: -1 });
     // Group notes by date (YYYY-MM-DD)
     const timeline = {};
     notes.forEach(note => {

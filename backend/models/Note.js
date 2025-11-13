@@ -40,7 +40,13 @@ const noteSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
-  sharedWith: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
+  sharedWith: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    accessLevel: { type: String, enum: ['read', 'write'], default: 'read' },
+    sharedAt: { type: Date, default: Date.now }
+  }],
+  parentNote: { type: mongoose.Schema.Types.ObjectId, ref: 'Note' }, // Reference to original note if this is a shared copy
+  isSharedCopy: { type: Boolean, default: false }
 });
 
 // Update the updatedAt field before saving

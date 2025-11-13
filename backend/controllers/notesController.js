@@ -8,32 +8,55 @@ export const getNotes = async (req, res) => {
   try {
     const { page = 1, limit = 10, category, priority, search } = req.query
     
-    // Build query
-    const query = { 
-      owner: req.user.id,
-      isArchived: false
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        msg: 'User not authenticated'
+      });
     }
+
+    // Build query for user's own notes and notes shared with them
+    const query = {
+      $or: [
+        { owner: req.user._id },
+        { sharedWith: req.user._id }
+      ]
+    };
+
     if (category && category !== 'all') {
-      query.category = category
+      query.category = category;
     }
     if (priority && priority !== 'all') {
-      query.priority = priority
+      query.priority = priority;
     }
     if (search) {
-      query.$or = [
-        { text: { $regex: search, $options: 'i' } }
-      ]
+      query.$and = [{
+        $or: [
+          { text: { $regex: search, $options: 'i' } }
+        ]
+      }];
     }
+
     // Execute query with pagination
     const notes = await Note.find(query)
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit)
-      .populate('owner', 'name email')
-    const total = await Note.countDocuments(query)
+      .populate('owner', 'name email _id')
+      .populate('sharedWith', 'name email _id');
+
+    const total = await Note.countDocuments(query);
+
+    // Transform notes to include ownership info
+    const transformedNotes = notes.map(note => ({
+      ...note.toObject(),
+      isOwner: note.owner._id.toString() === req.user._id.toString(),
+      sharedWithMe: note.sharedWith.some(user => user._id.toString() === req.user._id.toString())
+    }));
+
     res.json({
       success: true,
-      data: notes,
+      data: transformedNotes,
       pagination: {
         total,
         pages: Math.ceil(total / limit),
@@ -89,6 +112,13 @@ export const getNote = async (req, res) => {
 
 export const createNote = async (req, res) => {
   try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        msg: 'User not authenticated'
+      });
+    }
+
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
       return res.status(400).json({
@@ -102,14 +132,28 @@ export const createNote = async (req, res) => {
 
     const note = new Note({
       text: content.trim(),
-      owner: req.user.id
+      owner: req.user._id,
+      title: title?.trim(),
+      category,
+      priority,
+      tags: tags?.map(tag => tag.trim()).filter(Boolean),
+      reminderDate,
+      sharedWith: [] // Initialize empty shared users array
     })
+    
     await note.save()
-    await note.populate('owner', 'name email')
+    await note.populate('owner', 'name email _id')
+    
+    const noteWithOwnership = {
+      ...note.toObject(),
+      isOwner: true,
+      sharedWithMe: false
+    };
+
     res.status(201).json({
       success: true,
       msg: 'Note created successfully',
-      data: note
+      data: noteWithOwnership
     })
   } catch (error) {
     console.error('Create note error:', error.message)

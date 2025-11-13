@@ -5,8 +5,33 @@ import Button from '../Common/Button';
 import useAuth from '../../hooks/useAuth';
 import notesService from '../../services/notesService';
 
+const DoodleAccent = ({ className = '' }) => (
+  <svg
+    className={className}
+    viewBox="0 0 48 24"
+    role="presentation"
+    aria-hidden="true"
+  >
+    <path
+      d="M2 14c6-6 10 4 20 0s14 6 22 0"
+      stroke="#2563EB"
+      strokeWidth={2}
+      fill="none"
+      strokeLinecap="round"
+    />
+    <path
+      d="M12 4c2-.5 3 2 5 2s3-2 5-2 3 2 5 2"
+      stroke="#9333EA"
+      strokeWidth={1.5}
+      fill="none"
+      strokeLinecap="round"
+    />
+    <circle cx="36" cy="9" r="3" fill="#fbbf24" />
+  </svg>
+);
 
-const SavedNotes = () => {
+
+const SavedNotes = ({ onSelectForShare }) => {
   const { token } = useAuth();
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,6 +40,7 @@ const SavedNotes = () => {
   const [addingNote, setAddingNote] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState('');
+  const [selectedForShareId, setSelectedForShareId] = useState(null);
 
 
 
@@ -138,9 +164,14 @@ const SavedNotes = () => {
     <div className="max-w-4xl mx-auto p-6">
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-gray-800 mb-2">📝 My Notes</h1>
-        <p className="text-gray-600">Save and organize your thoughts</p>
-      </div>
+            <div className="flex justify-center items-center gap-3">
+              <h1 className="text-4xl font-bold text-gray-800 mb-2">My Notes</h1>
+              <div className="w-16 h-10">
+                <DoodleAccent className="w-full h-full" />
+              </div>
+            </div>
+            <p className="text-gray-600">Save and organize your thoughts</p>
+          </div>
 
       {/* Error Message */}
       {error && (
@@ -151,7 +182,7 @@ const SavedNotes = () => {
               onClick={() => setError(null)}
               className="text-red-700 hover:text-red-900"
             >
-              ✕
+              Close
             </button>
           </div>
         </div>
@@ -159,7 +190,12 @@ const SavedNotes = () => {
 
       {/* Add New Note */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">✍️ Write a New Note</h2>
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <h2 className="text-xl font-semibold text-gray-800">Write a New Note</h2>
+          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-gray-400">
+            <DoodleAccent className="w-12 h-6" />
+          </div>
+        </div>
         <textarea
           value={newNoteText}
           onChange={(e) => setNewNoteText(e.target.value)}
@@ -183,7 +219,7 @@ const SavedNotes = () => {
       {/* Notes List */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold mb-6 text-gray-800">
-          📚 Your Notes ({notes.length})
+          Your Notes ({notes.length})
         </h2>
         
         {notes.length > 0 ? (
@@ -221,15 +257,15 @@ const SavedNotes = () => {
                         {note.text}
                       </p>
                       <div className="text-sm text-gray-500">
-                        <span>📅 Created: {formatDate(note.createdAt)}</span>
+                        <span>Created: {formatDate(note.createdAt)}</span>
                         {note.updatedAt !== note.createdAt && (
                           <span className="ml-4">
-                            ✏️ Updated: {formatDate(note.updatedAt)}
+                            Updated: {formatDate(note.updatedAt)}
                           </span>
                         )}
                       </div>
                     </div>
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-2 items-center">
                       <Button
                         onClick={() => handleEditNote(note)}
                         className="bg-yellow-500 hover:bg-yellow-600 px-3 py-1 text-sm"
@@ -240,6 +276,21 @@ const SavedNotes = () => {
                         className="bg-red-500 hover:bg-red-600 px-3 py-1 text-sm"
                         text="Delete"
                       />
+                      <button
+                        className={`ml-2 px-3 py-1 text-sm rounded ${selectedForShareId === note._id ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'}`}
+                        onClick={() => {
+                          if (selectedForShareId === note._id) {
+                            setSelectedForShareId(null);
+                            if (typeof onSelectForShare === 'function') onSelectForShare(null);
+                          } else {
+                            setSelectedForShareId(note._id);
+                            if (typeof onSelectForShare === 'function') onSelectForShare(note);
+                            alert('Selected this note for sharing. Now open Friends and choose a friend to share with.');
+                          }
+                        }}
+                      >
+                        {selectedForShareId === note._id ? 'Selected' : 'Share'}
+                      </button>
                     </div>
                   </div>
                 )}
@@ -248,10 +299,9 @@ const SavedNotes = () => {
           </div>
         ) : (
           <div className="text-center py-12">
-            <div className="text-gray-400 text-6xl mb-4">📝</div>
-            <p className="text-gray-500 text-lg">No notes yet!</p>
-            <p className="text-gray-400">Write your first note above to get started.</p>
-          </div>
+              <p className="text-gray-500 text-lg font-semibold mb-2">No notes yet!</p>
+              <p className="text-gray-400">Write your first note above to get started.</p>
+            </div>
         )}
       </div>
     </div>

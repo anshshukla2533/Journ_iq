@@ -33,14 +33,48 @@ const ChatWindow = ({ friend, onClose }) => {
       fetchFriendProfile();
       if (token && friend?._id) {
         socketRef.current = createSocket(token);
-        socketRef.current.on('receive_message', (msg) => {
-          if (msg.sender === friend._id || msg.receiver === friend._id) {
+
+        // Helper to extract message object whether server sends raw message or wrapper { conversationId, message }
+        const extractMessage = (payload) => {
+          if (!payload) return null;
+          if (payload.message) return payload.message;
+          return payload;
+        };
+
+        socketRef.current.on('receive_message', (payload) => {
+          const msg = extractMessage(payload);
+          if (!msg) return;
+          // Accept both recipient/receiver shapes and compare ids as strings
+          const senderId = String(msg.sender || (msg.sender && msg.sender._id) || '');
+          const receiverId = String(msg.receiver || msg.recipient || (msg.recipient && msg.recipient._id) || '');
+          if (senderId === String(friend._id) || receiverId === String(friend._id)) {
             setMessages((prev) => [...prev, msg]);
           }
         });
-        socketRef.current.on('message_sent', (msg) => {
-          if (msg.receiver === friend._id) {
-            setMessages((prev) => [...prev, msg]);
+
+        socketRef.current.on('message_sent', (payload) => {
+          // payload may be { success, conversationId, message, tempId }
+          const msg = extractMessage(payload);
+          const tempId = payload?.tempId;
+          if (!msg) return;
+          const receiverId = String(msg.receiver || msg.recipient || (msg.recipient && msg.recipient._id) || '');
+
+          // If the sender had created a temp message, replace it (otherwise append)
+          if (tempId) {
+            setMessages(prev => {
+              let replaced = false;
+              const next = prev.map(m => {
+                if (m._id === tempId) {
+                  replaced = true;
+                  return msg;
+                }
+                return m;
+              });
+              if (!replaced) next.push(msg);
+              return next;
+            });
+          } else if (receiverId === String(friend._id) || String(msg.sender) === String(friend._id)) {
+            setMessages(prev => [...prev, msg]);
           }
         });
         socketRef.current.on('message_read', ({ messageId }) => {
@@ -142,13 +176,31 @@ const ChatWindow = ({ friend, onClose }) => {
     const sendMessage = () => {
       if (!input.trim() && !selectedNote) return;
       setSending(true);
+
+      // create a temp id for optimistic UI
+      const tempId = `temp-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      const tempMsg = {
+        _id: tempId,
+        sender: user?.id,
+        receiver: friend._id,
+        content: input,
+        note: selectedNote ? { _id: selectedNote } : null,
+        status: 'sending',
+        createdAt: new Date().toISOString()
+      };
+
+      // Optimistically show the message
+      setMessages(prev => [...prev, tempMsg]);
+
       if (socketRef.current) {
         socketRef.current.emit('send_message', {
           receiverId: friend._id,
           content: input,
-          noteId: selectedNote || undefined
+          noteId: selectedNote || undefined,
+          tempId
         });
       }
+
       setInput('');
       setSelectedNote('');
       setSending(false);
@@ -264,7 +316,7 @@ const ChatWindow = ({ friend, onClose }) => {
             status={callStatus}
           />
         )}
-        <div className="fixed right-0 top-0 h-full w-96 bg-white shadow-2xl z-[300] flex flex-col">
+        <div className="fixed right-0 top-0 h-full w-96 bg-gray-200 shadow-2xl z-[300] flex flex-col">
           {/* Profile Section */}
           <div className="p-4 border-b flex items-center justify-between bg-gray-50">
             <div className="flex items-center gap-3">

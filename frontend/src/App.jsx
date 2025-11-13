@@ -1,68 +1,82 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import AuthPage from './components/Auth/AuthPage';
-import DashboardPage from './components/Dashboard/DashboardPage';
+import LoadingTransition from './components/Common/LoadingTransition';
 import useAuth from './hooks/useAuth';
 import useNews from './hooks/useNews';
+
+
+// Lazy load the dashboard for better initial load performance
+const DashboardPage = React.lazy(() => import('./components/Dashboard/DashboardPage'));
 
 function App() {
   const auth = useAuth();
   const { news, fetchNews } = useNews();
   const location = useLocation();
   const navigate = useNavigate();
-  // On first load, check if user is logged in (from localStorage or OAuth)
-  const [currentPage, setCurrentPage] = useState(() => {
-    const storedUser = localStorage.getItem('user');
-    const storedToken = localStorage.getItem('token');
-    return (storedUser && storedToken) ? 'dashboard' : 'login';
-  });
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // If user is set (from OAuth/cookie), go to dashboard
+  // Check authentication status on initial load
   useEffect(() => {
-    if (auth.user && currentPage !== 'dashboard') {
-      setCurrentPage('dashboard');
-      if (location.pathname.startsWith('/dashboard')) return;
-      navigate('/dashboard');
+    const checkAuth = async () => {
+      try {
+        const isAuthenticated = await auth.checkAuthStatus();
+        setIsInitialized(true);
+        if (!isAuthenticated && location.pathname !== '/login') {
+          navigate('/login', { replace: true });
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        setIsInitialized(true);
+        navigate('/login', { replace: true });
+      }
+    };
+    checkAuth();
+  }, []);
+
+  // Handle routing after auth check
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    if (!auth.token && location.pathname !== '/login') {
+      navigate('/login', { replace: true });
+    } else if (auth.token && location.pathname === '/login') {
+      navigate('/dashboard', { replace: true });
     }
-  }, [auth.user, currentPage, location.pathname, navigate]);
+  }, [auth.token, location.pathname, navigate, isInitialized]);
 
   useEffect(() => {
-    if (currentPage === 'dashboard') {
+    if (auth.user && location.pathname.startsWith('/dashboard')) {
       fetchNews();
     }
-  }, [currentPage, fetchNews]);
+  }, [auth.user, location.pathname, fetchNews]);
 
   const handleLogin = async () => {
     const success = await auth.login();
     if (success) {
-      setCurrentPage('dashboard');
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
     }
   };
 
   const handleLogout = () => {
     auth.logout();
-    setCurrentPage('login');
-    navigate('/');
+    navigate('/', { replace: true });
   };
 
+  // Use the loading transition component
+  if (auth.isLoading) {
+    return <LoadingTransition />;
+  }
+
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 flex items-center justify-center">
+    <div className="App min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-blue-50">
       <div className="w-full">
         <Routes>
-          <Route
-            path="/"
-            element={
-              currentPage === 'login' ? (
-                <Navigate to="/login" />
-              ) : (
-                <Navigate to="/dashboard" />
-              )
-            }
-          />
-          <Route
-            path="/login"
-            element={
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={
+            auth.token ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
               <AuthPage
                 authMode={auth.authMode}
                 setAuthMode={auth.setAuthMode}
@@ -73,23 +87,18 @@ function App() {
                 onLogin={handleLogin}
                 onRegister={auth.register}
               />
-            }
-          />
-          <Route
-            path="/dashboard/*"
-            element={
-              auth.user ? (
-                <Routes>
-                  <Route path="" element={<DashboardPage user={auth.user} news={news} onLogout={handleLogout} />} />
-                  <Route path="news" element={<DashboardPage user={auth.user} news={news} onLogout={handleLogout} />} />
-                  <Route path="notes" element={<DashboardPage user={auth.user} news={news} onLogout={handleLogout} />} />
-                  <Route path="videos" element={<DashboardPage user={auth.user} news={news} onLogout={handleLogout} />} />
-                </Routes>
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
+            )
+          } />
+          <Route path="/dashboard/*" element={
+            !auth.token ? (
+              <Navigate to="/login" replace />
+            ) : (
+              <Suspense fallback={<LoadingTransition />}>
+                <DashboardPage user={auth.user} news={news} onLogout={handleLogout} />
+              </Suspense>
+            )
+          } />
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </div>
     </div>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 const LOCAL_STORAGE_KEY = 'todoList';
 
-const ToDoSidebar = ({ onClose }) => {
+const ToDoSidebar = ({ showAsMainContent = true }) => {
   const [todos, setTodos] = useState(() => {
     const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
     return stored ? JSON.parse(stored) : [];
@@ -38,18 +38,9 @@ const ToDoSidebar = ({ onClose }) => {
   };
 
   return (
-    <aside className="w-80 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 h-screen flex flex-col p-4 shadow-lg fixed left-0 top-0 z-40" style={{ minHeight: '100vh', pointerEvents: 'auto' }}>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">To-Do List</h2>
-        {onClose && (
-          <button
-            className="ml-2 px-2 py-1 text-gray-500 hover:text-red-600 text-lg font-bold rounded transition"
-            onClick={onClose}
-            aria-label="Close To-Do"
-          >
-            ×
-          </button>
-        )}
+    <div className="bg-white dark:bg-gray-900 flex flex-col p-4 w-full h-full rounded-lg">
+      <div className="mb-4">
+        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Manage Your Tasks</h2>
       </div>
       <form
         onSubmit={e => {
@@ -116,7 +107,7 @@ const ToDoSidebar = ({ onClose }) => {
           ))}
         </ul>
       </div>
-    </aside>
+    </div>
   );
 };
 

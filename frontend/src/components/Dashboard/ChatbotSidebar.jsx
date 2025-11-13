@@ -1,137 +1,257 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState, useRef, useEffect } from 'react';
+import { MessageSquare, X, Send, Copy, Check } from 'lucide-react';
 
-const SEARCH_API_URL = '/api/notes/search';
-
-const WIKI_API_URL = 'https://en.wikipedia.org/w/api.php';
-
-const ChatbotSidebar = ({ onClose }) => {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState([]);
-  const [webResults, setWebResults] = useState([]);
+const ChatbotSidebar = () => {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState('notes'); // 'notes' or 'web'
-  const [webModal, setWebModal] = useState(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState(null);
+  const messagesEndRef = useRef(null);
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setResults([]);
-    setWebResults([]);
-    try {
-      if (mode === 'notes') {
-        const res = await axios.get(`${SEARCH_API_URL}?q=${encodeURIComponent(query)}`);
-        setResults(Array.isArray(res.data) ? res.data : []);
-      } else {
-        // Wikipedia search API fallback
-        try {
-          const res = await axios.get(WIKI_API_URL, {
-            params: {
-              action: 'query',
-              list: 'search',
-              srsearch: query,
-              format: 'json',
-              origin: '*',
-            },
-          });
-          const results = res.data.query && res.data.query.search ? res.data.query.search : [];
-          setWebResults(results);
-        } catch (err) {
-          setWebResults([]);
-        }
+  // Gemini from env (do not hardcode)
+  const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyBwxoEl30l_IowreNM61xocO194Zi6uZBY';
+  const GEMINI_MODEL = import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.5-flash';
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(scrollToBottom, [messages]);
+
+  const callGemini = async (userMessage) => {
+    if (!GEMINI_API_KEY) throw new Error('Gemini API key not configured.');
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': GEMINI_API_KEY
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: userMessage
+                }
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.5,
+            maxOutputTokens: 400
+          }
+        })
       }
-    } catch (err) {
-      setResults([]);
-      setWebResults([]);
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data?.error?.message || `HTTP ${response.status}`);
     }
-    setLoading(false);
+    if (data?.promptFeedback?.blockReason) {
+      throw new Error(`Content blocked: ${data.promptFeedback.blockReason}`);
+    }
+    if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+      return data.candidates[0].content.parts[0].text;
+    }
+    throw new Error('No response generated');
+  };
+
+  const normalizeText = (text) => {
+    const parts = String(text).split(/```/);
+    if (parts.length === 1) return { type: 'text', content: text };
+    return { type: 'mixed', content: parts };
+  };
+
+  const copyToClipboard = async (str, index) => {
+    try {
+      await navigator.clipboard.writeText(str);
+      setCopiedIndex(index);
+      setTimeout(() => setCopiedIndex(null), 2000);
+    } catch {}
+  };
+
+  const handleSubmit = async () => {
+    if (!input.trim() || loading) return;
+
+    const userMessage = input.trim();
+    setInput('');
+    setMessages((prev) => [...prev, { role: 'user', content: userMessage }]);
+
+    setLoading(true);
+    try {
+      const aiResponse = await callGemini(userMessage);
+      setMessages((prev) => [...prev, { role: 'assistant', content: aiResponse }]);
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: `Error: ${error.message}. Please check your API configuration.`
+        }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
+  const renderMessage = (message, index) => {
+    const me = message.role === 'user';
+    const normalized = normalizeText(message.content);
+
+    if (normalized.type === 'mixed') {
+      return (
+        <div key={index} className={`flex ${me ? 'justify-end' : 'justify-start'} mb-4`}>
+          <div className={`max-w-[85%] ${me ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white' : 'bg-white border border-gray-200'} rounded-2xl shadow-sm overflow-hidden`}>
+            <div className="p-4 space-y-3">
+              {normalized.content.map((chunk, i) => (
+                i % 2 === 0 ? (
+                  <div key={`t-${i}`} className={`text-sm leading-relaxed ${me ? 'text-white' : 'text-gray-800'}`}>
+                    {chunk}
+                  </div>
+                ) : (
+                  <div key={`c-${i}`} className="relative group">
+                    <pre className="text-xs leading-relaxed overflow-x-auto p-4 rounded-lg bg-gray-50 text-gray-800 font-mono border border-gray-200">
+{chunk}
+                    </pre>
+                    <button
+                      onClick={() => copyToClipboard(chunk, `${index}-${i}`)}
+                      className="absolute top-2 right-2 p-1.5 rounded-md bg-white hover:bg-gray-100 border border-gray-200 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Copy code"
+                    >
+                      {copiedIndex === `${index}-${i}` ? (
+                        <Check className="w-3.5 h-3.5 text-green-600" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5 text-gray-600" />
+                      )}
+                    </button>
+                  </div>
+                )
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div key={index} className={`flex ${me ? 'justify-end' : 'justify-start'} mb-4`}>
+        <div className={`max-w-[85%] rounded-2xl shadow-sm p-4 ${
+          me 
+            ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white' 
+            : 'bg-white border border-gray-200 text-gray-800'
+        }`}>
+          <div className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</div>
+        </div>
+      </div>
+    );
   };
 
   return (
-    <aside className="w-80 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 h-screen flex flex-col p-4 shadow-lg fixed right-0 top-0 z-40" style={{ minHeight: '100vh', pointerEvents: 'auto' }}>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Chatbot Assistant</h2>
-        {onClose && (
-          <button
-            className="ml-2 px-2 py-1 text-gray-500 hover:text-red-600 text-lg font-bold rounded transition"
-            onClick={onClose}
-            aria-label="Close Chatbot"
-          >
-            ×
-          </button>
-        )}
-      </div>
-      <div className="flex mb-2">
+    <>
+      {!isOpen && (
         <button
-          className={`flex-1 px-2 py-1 rounded-l ${mode === 'notes' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200'}`}
-          onClick={() => setMode('notes')}
+          onClick={() => setIsOpen(true)}
+          className="fixed right-6 bottom-20 z-30 bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-4 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2.5 group"
         >
-          Notes
+          <MessageSquare className="w-5 h-5 group-hover:scale-110 transition-transform" />
+          <span>Luna</span>
         </button>
-        <button
-          className={`flex-1 px-2 py-1 rounded-r ${mode === 'web' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200'}`}
-          onClick={() => setMode('web')}
-        >
-          Web
-        </button>
-      </div>
-      <form onSubmit={handleSearch} className="flex mb-4">
-        <input
-          type="text"
-          className="flex-1 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-l bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none"
-          placeholder={mode === 'notes' ? 'Search your notes...' : 'Search the web...'}
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-        />
-        <button
-          type="submit"
-          className="px-4 py-1 bg-blue-600 text-white rounded-r hover:bg-blue-700 transition"
-          disabled={loading || !query.trim()}
-        >
-          {loading ? '...' : 'Go'}
-        </button>
-      </form>
-      <div className="flex-1 overflow-y-auto">
-        {mode === 'notes' && !loading && results.length === 0 && query.trim() && (
-          <div className="text-gray-500 text-center">No notes found.</div>
-        )}
-        {mode === 'notes' && results.length > 0 && (
-          <ul>
-            {results.map(note => (
-              <li key={note._id} className="mb-3 p-2 bg-gray-100 dark:bg-gray-800 rounded shadow">
-                <div className="text-gray-900 dark:text-gray-100">{note.text}</div>
-                <div className="text-xs text-gray-500 mt-1">{note.date || note.createdAt}</div>
-              </li>
-            ))}
-          </ul>
-        )}
-        {mode === 'web' && !loading && webResults.length === 0 && query.trim() && (
-          <div className="text-red-500 text-center">No web results found or search failed.</div>
-        )}
-        {mode === 'web' && webResults.length > 0 && (
-          <ul>
-            {webResults.map((item, idx) => (
-              <li key={idx} className="mb-3 p-2 bg-gray-100 dark:bg-gray-800 rounded shadow">
-                <div className="text-blue-700 dark:text-blue-300 font-medium hover:underline cursor-pointer" onClick={() => setWebModal({ title: item.title, snippet: item.snippet && item.snippet.replace(/<[^>]+>/g, '') })}>
-                  {item.title}
+      )}
+
+      {isOpen && (
+        <div className="w-[420px] max-w-[95vw] bg-gray-50 border-l border-gray-200 h-screen flex flex-col fixed right-0 top-0 z-40 shadow-2xl">
+          {/* Header */}
+          <div className="p-5 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center font-semibold text-lg border border-white/30">
+                  L
                 </div>
-                <div className="text-xs text-gray-500 mt-1">{item.snippet && item.snippet.replace(/<[^>]+>/g, '')}</div>
-              </li>
-            ))}
-          </ul>
-        )}
-        {/* Web search modal overlay */}
-        {webModal && (
-          <div className="fixed inset-0 z-[200] bg-black/60 flex items-center justify-center">
-            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 max-w-xl w-full relative">
-              <button className="absolute top-2 right-2 text-2xl text-gray-500 hover:text-red-600" onClick={() => setWebModal(null)}>×</button>
-              <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">{webModal.title}</h2>
-              <div className="text-gray-700 dark:text-gray-200">{webModal.snippet}</div>
+                <div>
+                  <h2 className="text-lg font-semibold">Luna AI Assistant</h2>
+                  <p className="text-xs text-blue-100 mt-0.5">Powered by {GEMINI_MODEL}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsOpen(false)} 
+                className="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-lg transition-colors" 
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
           </div>
-        )}
-      </div>
-    </aside>
+
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto p-5 space-y-1">
+            {messages.length === 0 && (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center space-y-3 max-w-sm">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center mx-auto">
+                    <MessageSquare className="w-8 h-8 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-1">Welcome to Luna</h3>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      Your intelligent AI assistant powered by Gemini. Ask me anything to get started.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            {messages.map((m, i) => renderMessage(m, i))}
+            {loading && (
+              <div className="flex justify-start mb-4">
+                <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input */}
+          <div className="p-5 bg-white border-t border-gray-200">
+            <div className="flex items-end gap-2">
+              <div className="flex-1 relative min-w-0">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Type your message..."
+                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent focus:bg-white transition-all text-sm"
+                  disabled={loading}
+                />
+              </div>
+              <button
+                onClick={handleSubmit}
+                disabled={loading || !input.trim()}
+                className="px-5 py-3 bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-sm flex items-center gap-2 font-medium text-sm"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

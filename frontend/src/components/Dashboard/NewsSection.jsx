@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 import useAuth from '../../hooks/useAuth';
+import { AiOutlineReload } from 'react-icons/ai';
+import { FiClock } from 'react-icons/fi';
 
-
-const NewsSection = ({ news }) => {
+const NewsSection = ({ news, loading, error }) => {
   const { token } = useAuth();
   const [modalArticle, setModalArticle] = useState(null);
   // Note saving is handled via the draggable Save Note widget on the Dashboard
@@ -41,7 +42,7 @@ const NewsSection = ({ news }) => {
       {modalArticle && (
         <div className="fixed inset-0 z-[200] bg-black/60 flex items-center justify-center">
           <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 max-w-xl w-full relative">
-            <button className="absolute top-2 right-2 text-2xl text-gray-500 hover:text-red-600" onClick={() => { setModalArticle(null); setNote(''); setSaveMsg(''); }}>×</button>
+            <button className="absolute top-2 right-2 text-2xl text-gray-500 hover:text-red-600" onClick={() => { setModalArticle(null); }}>×</button>
             <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">{modalArticle.title}</h2>
             {modalArticle.description && (
               <div className="text-gray-700 dark:text-gray-200 mb-4">{modalArticle.description}</div>

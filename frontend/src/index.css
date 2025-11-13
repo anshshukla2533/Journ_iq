@@ -3,8 +3,12 @@
 @tailwind utilities;
 
 /* Custom styles */
+html, body, #root {
+  height: 100%;
+}
 body {
-  background: linear-gradient(135deg, #181a20, #23272f, #23272f);
+  margin: 0;
+  background: #ffffff; /* Remove dark gradient to avoid black screen */
   min-height: 100vh;
 }
 code {

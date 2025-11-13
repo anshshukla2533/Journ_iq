@@ -70,30 +70,34 @@ const AuthPage = ({
 
   return (
     <>
-      {/* Header Bar - hidden at top, sticky after scroll */}
+      {/* Modern Header Bar with gradient background */}
       <header
-        className={`w-full bg-[#fcfbfa] border-b border-gray-200 flex items-center justify-between px-8 py-4 transition-all duration-300 z-50
+        className={`w-full bg-gradient-to-r from-indigo-600 to-violet-600 flex items-center justify-between px-8 py-4 transition-all duration-300 z-50
           ${showHeader ? 'fixed top-0 left-0 right-0 shadow-lg opacity-100' : 'opacity-0 pointer-events-none'}
         `}
         style={{ position: showHeader ? 'fixed' : 'absolute' }}
       >
         <div className="flex items-center">
-          <span className="text-2xl mr-2" role="img" aria-label="logo">✶</span>
-          <span className="text-2xl font-bold tracking-tight text-gray-900">JournIQ</span>
+          <svg className="w-8 h-8 mr-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+          <span className="text-2xl font-bold tracking-tight text-white">JournIQ</span>
         </div>
         <nav className="flex items-center gap-10">
-          <button onClick={() => scrollToRef(featuresRef)} className="text-lg text-gray-800 hover:text-black font-medium bg-transparent border-none cursor-pointer">Features</button>
-          <button onClick={() => scrollToRef(plansRef)} className="text-lg text-gray-800 hover:text-black font-medium bg-transparent border-none cursor-pointer">Pricing</button>
-          <button onClick={() => scrollToRef(faqRef)} className="text-lg text-gray-800 hover:text-black font-medium bg-transparent border-none cursor-pointer">FAQ</button>
+          <button onClick={() => scrollToRef(featuresRef)} className="text-lg text-white hover:text-gray-200 font-medium bg-transparent border-none cursor-pointer">Features</button>
+          <button onClick={() => scrollToRef(plansRef)} className="text-lg text-white hover:text-gray-200 font-medium bg-transparent border-none cursor-pointer">Pricing</button>
+          <button onClick={() => scrollToRef(faqRef)} className="text-lg text-white hover:text-gray-200 font-medium bg-transparent border-none cursor-pointer">FAQ</button>
         </nav>
-        <button onClick={() => scrollToRef(loginRef)} className="bg-black text-white font-bold rounded-xl px-6 py-2 text-lg shadow hover:bg-gray-800 transition">Get started</button>
+        <button onClick={() => scrollToRef(loginRef)} className="bg-white text-indigo-600 font-bold rounded-xl px-6 py-2 text-lg shadow hover:bg-gray-100 transition">Get started</button>
       </header>
       <div className="auth-page min-h-screen w-full flex flex-col md:flex-row bg-[#fcfbfa]">
         {}
         <div ref={featuresRef} className="flex-1 flex flex-col justify-center items-center px-8 py-12 md:py-0 bg-[#fcfbfa]">
           <div className="max-w-lg w-full">
             <div className="flex items-center mb-6">
-              <span className="text-3xl mr-2" role="img" aria-label="logo">✶</span>
+              <svg className="w-10 h-10 mr-2 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
               <span className="text-2xl font-bold tracking-tight text-gray-900">JournIQ</span>
             </div>
             <h1 className="text-5xl font-extrabold text-gray-900 mb-4 leading-tight">Your ideas, amplified</h1>
@@ -101,11 +105,36 @@ const AuthPage = ({
             <div className="mb-10">
               <h2 className="text-xl font-bold text-gray-900 mb-3">Features</h2>
               <ul className="list-none text-gray-700 space-y-3">
-                <li className="flex items-center"><span className="mr-2">📝</span> Save and organize your notes</li>
-                <li className="flex items-center"><span className="mr-2">🔍</span> Search and edit notes instantly</li>
-                <li className="flex items-center"><span className="mr-2">📰</span> Stay updated with the latest news</li>
-                <li className="flex items-center"><span className="mr-2">🌈</span> Modern, minimal interface</li>
-                <li className="flex items-center"><span className="mr-2">🔒</span> Secure login and registration</li>
+                <li className="flex items-center">
+                  <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  Save and organize your notes
+                </li>
+                <li className="flex items-center">
+                  <svg className="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  Search and edit notes instantly
+                </li>
+                <li className="flex items-center">
+                  <svg className="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                  </svg>
+                  Stay updated with the latest news
+                </li>
+                <li className="flex items-center">
+                  <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                  </svg>
+                  Modern, minimal interface
+                </li>
+                <li className="flex items-center">
+                  <svg className="w-5 h-5 mr-2 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  Secure login and registration
+                </li>
               </ul>
             </div>
           </div>
@@ -199,15 +228,11 @@ const AuthPage = ({
       
       <section ref={faqRef} className="w-full bg-[#fcfbfa] py-16 px-4 flex flex-col items-center border-t border-gray-200">
         {/* ...existing code... */}
-        {/* Footer trigger element (invisible, for observer) */}
-        <div ref={footerTriggerRef} style={{ height: '1px', width: '100%' }}></div>
-      </section>
-      {}
-      {showFooter && (
-        <footer className="w-full bg-black text-red py-6 flex items-center justify-center mt-0 border-t border-gray-900 fixed bottom-0 left-0 z-50">
-          <span className="text-lg font-semibold tracking-wide">Made by Ansh</span>
-        </footer>
-      )}
+        </section>
+      {/* Minimal Acknowledgment */}
+      <div className="text-center py-2 text-sm text-gray-500">
+        Developed by Ansh · © 2025
+      </div>
     </>
   );
 }

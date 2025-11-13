@@ -3,6 +3,7 @@ import authService from '../services/authService'
 
 
 const useAuth = () => {
+  const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(() => {
     const stored = localStorage.getItem('user');
     return stored ? JSON.parse(stored) : null;
@@ -13,22 +14,50 @@ const useAuth = () => {
   const [registerForm, setRegisterForm] = useState({ name: '', email: '', password: '' });
 
  
-  useEffect(() => {
-    const checkOAuthSession = async () => {
-      try {
-        const res = await fetch('/api/auth/user', {
-          method: 'GET',
-          credentials: 'include',
-        });
-        const data = await res.json();
-        if (data.success && data.user) {
-          setUser({ name: data.user.name });
+  const checkAuthStatus = async () => {
+    setIsLoading(true);
+    try {
+      const storedToken = localStorage.getItem('token');
+      if (storedToken) {
+        const response = await authService.getCurrentUser(storedToken);
+        if (response.success && response.data) {
+          setUser({ 
+            _id: response.data._id || response.data.id,
+            id: response.data._id || response.data.id,
+            name: response.data.name,
+            email: response.data.email
+          });
+          setToken(storedToken);
+          return true;
+        } else {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setToken(null);
+          setUser(null);
+          return false;
         }
-      } catch (e) {
-       
       }
+      return false;
+    } catch (e) {
+      console.error('Failed to check auth session:', e);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setToken(null);
+      setUser(null);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    
+    const initAuth = async () => {
+      setIsLoading(true);
+      await checkAuthStatus();
+      setIsLoading(false);
     };
-    if (!user) checkOAuthSession();
+    initAuth();
   }, []);
 
   useEffect(() => {
@@ -50,11 +79,17 @@ const useAuth = () => {
     try {
       const response = await authService.login(loginForm)
       if (response.success) {
+        const userData = {
+          _id: response.data.user?._id || response.data._id || response.data.id,
+          id: response.data.user?._id || response.data._id || response.data.id,
+          name: response.data.user?.name || response.data.name,
+          email: response.data.user?.email || response.data.email
+        };
         setToken(response.data.token)
-        setUser({ name: response.data.name })
+        setUser(userData)
         setLoginForm({ email: '', password: '' })
         // Persist in localStorage
-        localStorage.setItem('user', JSON.stringify({ name: response.data.name }));
+        localStorage.setItem('user', JSON.stringify(userData));
         localStorage.setItem('token', response.data.token);
         return true
       } else {
@@ -75,8 +110,19 @@ const useAuth = () => {
     
     try {
       const response = await authService.register(registerForm)
+      // If validation failed on the backend, show detailed errors when available
+      if (!response.success) {
+        if (response.errors && response.errors.length > 0) {
+          const msgs = response.errors.map(e => e.msg || e.message || JSON.stringify(e)).join('\n')
+          alert(msgs)
+        } else {
+          alert(response.message || 'Registration failed')
+        }
+        return
+      }
+
+      // Success
       alert(response.message)
-      
       if (response.success) {
         setRegisterForm({ name: '', email: '', password: '' })
         setAuthMode('login')
@@ -107,7 +153,9 @@ const useAuth = () => {
     setRegisterForm,
     login,
     register,
-    logout
+    logout,
+    isLoading,
+    checkAuthStatus
   }
 }
 
