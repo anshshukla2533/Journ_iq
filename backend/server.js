@@ -80,6 +80,11 @@ app.get('/', (req, res) => {
   res.send(' Backend is working');
 });
 
+// Lightweight API root health endpoint
+app.get('/api', (req, res) => {
+  res.json({ ok: true, service: 'journ-iq backend', version: '1.0', time: new Date().toISOString() });
+});
+
 import http from 'http';
 import setupSocket from './socket.new.js';
 
