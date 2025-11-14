@@ -21,10 +21,13 @@ import noteShareRoutes from './routes/noteShare.js';
 import friendsRoutes from './routes/friends.js';
 
 const app = express()
+// Behind Render/Proxy so trust the first proxy for secure cookies & IPs
+app.set('trust proxy', 1)
 app.use(session({
   secret: process.env.SESSION_SECRET || 'supersecret',
   resave: false,
   saveUninitialized: false,
+  proxy: true,
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
@@ -36,9 +39,15 @@ connectDB()
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }))
-// Configure CORS
+// Configure CORS to allow both Vercel and local dev origins
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  process.env.FRONTEND_URL,
+  'http://localhost:5173'
+].filter(Boolean);
+
 const corsOptions = {
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: allowedOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
