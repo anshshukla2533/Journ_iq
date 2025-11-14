@@ -13,3 +13,4 @@ yarn-error.log*
 backend/.env
 frontend/.env
 backend/.env.example
+*.env
