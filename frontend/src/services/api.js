@@ -1,6 +1,18 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : 'http://localhost:3000/api';
+// Intelligently resolve API URL based on environment
+const getApiUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  if (import.meta.env.DEV) {
+    return 'http://localhost:3000/api';
+  }
+  // Production without env var - use relative URL
+  return '/api';
+};
+
+const API_BASE_URL = getApiUrl();
 
 export const api = axios.create({
   baseURL: API_BASE_URL,

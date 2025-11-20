@@ -43,8 +43,12 @@ app.use(helmet({
 const allowedOrigins = [
   process.env.CLIENT_URL,
   process.env.FRONTEND_URL,
-  'http://localhost:5173'
+  process.env.VERCEL_FRONTEND_URL,
+  'http://localhost:5173',
+  'https://journ-iq-3ivl.vercel.app'
 ].filter(Boolean);
+
+console.log('Allowed CORS Origins:', allowedOrigins);
 
 const corsOptions = {
   origin: allowedOrigins,

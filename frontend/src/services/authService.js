@@ -1,6 +1,22 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+// Properly read VITE_API_URL from environment or fall back intelligently
+const getApiUrl = () => {
+  // In production (Vercel), VITE_API_URL should be set
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  // In local dev, use localhost
+  if (import.meta.env.DEV) {
+    return 'http://localhost:3000/api';
+  }
+  // Fallback for production without env var
+  return '/api'; // This will use relative URL
+};
+
+const API_BASE_URL = getApiUrl();
+
+console.log('API_BASE_URL:', API_BASE_URL, 'ENV:', import.meta.env.VITE_API_URL);
 
 // Create axios instance with default config
 const api = axios.create({

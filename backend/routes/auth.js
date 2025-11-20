@@ -12,9 +12,11 @@ import passport from '../config/passport.js'
 
 const router = express.Router()
 
-// Frontend login route
+// Frontend login route & OAuth setup
+const frontendUrl = process.env.FRONTEND_URL || process.env.VERCEL_FRONTEND_URL || 'http://localhost:5173';
+
 router.get('/login', (req, res) => {
-  res.redirect('http://localhost:5173/login');
+  res.redirect(`${frontendUrl}/login`);
 });
 
 // Google OAuth
@@ -25,7 +27,7 @@ router.get('/google', passport.authenticate('google', {
 
 router.get('/google/callback', 
   passport.authenticate('google', { 
-    failureRedirect: 'http://localhost:5173/login',
+    failureRedirect: `${frontendUrl}/login`,
     session: true 
   }), 
   (req, res) => {
@@ -37,13 +39,13 @@ router.get('/google/callback',
     );
     
     // Redirect to frontend callback route with token
-    res.redirect(`http://localhost:5173/auth/callback?token=${token}`);
+    res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
   });
 
 // GitHub OAuth
 router.get('/github/callback', 
   passport.authenticate('github', { 
-    failureRedirect: 'http://localhost:5173/login', 
+    failureRedirect: `${frontendUrl}/login`, 
     session: true 
   }), 
   (req, res) => {
@@ -53,10 +55,10 @@ router.get('/github/callback',
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRES_IN }
       );
-      res.redirect(`http://localhost:5173/dashboard?token=${token}`);
+      res.redirect(`${frontendUrl}/dashboard?token=${token}`);
     } catch (error) {
       console.error('Auth callback error:', error);
-      res.redirect('http://localhost:5173/login?error=auth_failed');
+      res.redirect(`${frontendUrl}/login?error=auth_failed`);
     }
   });
 

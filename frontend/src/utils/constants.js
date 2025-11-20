@@ -1,5 +1,16 @@
+// Dynamically get API base URL
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL.replace('/api', '');
+  }
+  if (import.meta.env.DEV) {
+    return 'http://localhost:3000';
+  }
+  return window.location.origin;
+};
+
 export const API_ENDPOINTS = {
-  BASE_URL: 'http://localhost:3000',
+  BASE_URL: getApiBaseUrl(),
   AUTH: {
     LOGIN: '/auth/login',
     REGISTER: '/auth/register',
