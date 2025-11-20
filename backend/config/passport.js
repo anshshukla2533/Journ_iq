@@ -3,6 +3,16 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as GitHubStrategy } from "passport-github2";
 import User from "../models/User.js";
 
+// Get the backend URL based on environment
+const getBackendUrl = () => {
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.BACKEND_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000';
+  }
+  return 'http://localhost:3000';
+};
+
+const backendUrl = getBackendUrl();
+
 // =======================
 // 🟢 GOOGLE STRATEGY
 // =======================
@@ -11,7 +21,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "http://localhost:3000/api/auth/google/callback", // backend route
+      callbackURL: `${backendUrl}/api/auth/google/callback`,
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
@@ -50,9 +60,7 @@ passport.use(
     {
       clientID: process.env.GITHUB_ID,
       clientSecret: process.env.GITHUB_SECRET,
-      callbackURL:
-        process.env.GITHUB_CALLBACK_URL ||
-        "http://localhost:3000/api/auth/github/callback", // fixed from 5001
+      callbackURL: `${backendUrl}/api/auth/github/callback`,
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
