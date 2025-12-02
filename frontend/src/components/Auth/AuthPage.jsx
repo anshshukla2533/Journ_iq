@@ -230,8 +230,8 @@ const AuthPage = ({
         {/* ...existing code... */}
         </section>
       {/* Minimal Acknowledgment */}
-      <div className="text-center py-2 text-sm text-gray-500">
-        Developed by Ansh · © 2025
+      <div className="text-center py-3 text-xs text-gray-400 border-t border-gray-200">
+        <p>Crafted with precision by <span className="font-semibold text-gray-600">Ansh Shukla</span> · © 2025</p>
       </div>
     </>
   );
