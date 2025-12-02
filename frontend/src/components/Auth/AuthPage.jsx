@@ -72,23 +72,23 @@ const AuthPage = ({
     <>
       {/* Modern Header Bar with gradient background */}
       <header
-        className={`w-full bg-gradient-to-r from-indigo-600 to-violet-600 flex items-center justify-between px-8 py-4 transition-all duration-300 z-50
+        className={`w-full bg-gradient-to-r from-indigo-600 to-violet-600 flex items-center justify-between px-4 md:px-8 py-3 md:py-4 transition-all duration-300 z-50
           ${showHeader ? 'fixed top-0 left-0 right-0 shadow-lg opacity-100' : 'opacity-0 pointer-events-none'}
         `}
         style={{ position: showHeader ? 'fixed' : 'absolute' }}
       >
-        <div className="flex items-center">
-          <svg className="w-8 h-8 mr-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="flex items-center gap-1 md:gap-2">
+          <svg className="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>
-          <span className="text-2xl font-bold tracking-tight text-white">JournIQ</span>
+          <span className="text-lg md:text-2xl font-bold tracking-tight text-white">JournIQ</span>
         </div>
-        <nav className="flex items-center gap-10">
-          <button onClick={() => scrollToRef(featuresRef)} className="text-lg text-white hover:text-gray-200 font-medium bg-transparent border-none cursor-pointer">Features</button>
-          <button onClick={() => scrollToRef(plansRef)} className="text-lg text-white hover:text-gray-200 font-medium bg-transparent border-none cursor-pointer">Pricing</button>
-          <button onClick={() => scrollToRef(faqRef)} className="text-lg text-white hover:text-gray-200 font-medium bg-transparent border-none cursor-pointer">FAQ</button>
+        <nav className="hidden md:flex items-center gap-6 md:gap-10">
+          <button onClick={() => scrollToRef(featuresRef)} className="text-sm md:text-lg text-white hover:text-gray-200 font-medium bg-transparent border-none cursor-pointer transition">Features</button>
+          <button onClick={() => scrollToRef(plansRef)} className="text-sm md:text-lg text-white hover:text-gray-200 font-medium bg-transparent border-none cursor-pointer transition">Pricing</button>
+          <button onClick={() => scrollToRef(faqRef)} className="text-sm md:text-lg text-white hover:text-gray-200 font-medium bg-transparent border-none cursor-pointer transition">FAQ</button>
         </nav>
-        <button onClick={() => scrollToRef(loginRef)} className="bg-white text-indigo-600 font-bold rounded-xl px-6 py-2 text-lg shadow hover:bg-gray-100 transition">Get started</button>
+        <button onClick={() => scrollToRef(loginRef)} className="bg-white text-indigo-600 font-bold rounded-lg md:rounded-xl px-3 md:px-6 py-2 md:py-2 text-sm md:text-lg shadow hover:bg-gray-100 transition">Get started</button>
       </header>
       <div className="auth-page min-h-screen w-full flex flex-col md:flex-row bg-[#fcfbfa]">
         {}
@@ -162,12 +162,12 @@ const AuthPage = ({
       </div>
       {}
       <section ref={plansRef} className="w-full bg-[#fcfbfa] py-16 px-4 flex flex-col items-center border-t border-gray-200">
-        <h2 className="text-4xl font-extrabold text-gray-900 mb-4 text-center">Meet Digital Diary</h2>
-        <p className="text-xl text-gray-700 mb-8 text-center max-w-3xl">Digital Diary is your next-generation personal assistant for notes, journaling, and productivity. Built to be secure, private, and easy to use, it helps you organize your thoughts, track your progress, and stay updated with news and trends. Your data is always yours, and your privacy is our top priority.</p>
+        <h2 className="text-4xl font-extrabold text-gray-900 mb-4 text-center">Meet JournIq </h2>
+        <p className="text-xl text-gray-700 mb-8 text-center max-w-3xl">JournIq is your next-generation personal assistant for notes, journaling, and productivity. Built to be secure, private, and easy to use, it helps you organize your thoughts, track your progress, and stay updated with news and trends. Your data is always yours, and your privacy is our top priority.</p>
         <div className="flex flex-col md:flex-row gap-8 justify-center w-full max-w-5xl">
           <div className="bg-white rounded-2xl shadow p-8 flex-1 min-w-[250px] border border-gray-100">
             <h3 className="text-2xl font-bold text-gray-900 mb-2">Free</h3>
-            <p className="text-gray-700 mb-4">Try Digital Diary for free</p>
+            <p className="text-gray-700 mb-4">Try JournIq for free</p>
             <ul className="list-disc list-inside text-gray-600 mb-2">
               <li>Unlimited notes</li>
               <li>Basic search & edit</li>
@@ -202,16 +202,16 @@ const AuthPage = ({
         <h2 className="text-3xl font-extrabold text-gray-900 mb-6 text-center">Frequently asked questions</h2>
         <div className="w-full max-w-3xl">
           <details className="mb-4 bg-white rounded-lg shadow p-4 border border-gray-100">
-            <summary className="font-semibold text-lg text-gray-800 cursor-pointer">What is Digital Diary and how does it work?</summary>
-            <p className="mt-2 text-gray-600">Digital Diary is a secure, cloud-based app for taking notes, journaling, and organizing your thoughts. You can access it from any device, and your data is always private and encrypted.</p>
+            <summary className="font-semibold text-lg text-gray-800 cursor-pointer">What is JournIQ Diary and how does it work?</summary>
+            <p className="mt-2 text-gray-600">JournIQ Diary is a secure, cloud-based app for taking notes, journaling, and organizing your thoughts. You can access it from any device, and your data is always private and encrypted.</p>
           </details>
           <details className="mb-4 bg-white rounded-lg shadow p-4 border border-gray-100">
-            <summary className="font-semibold text-lg text-gray-800 cursor-pointer">What can I use Digital Diary for?</summary>
-            <p className="mt-2 text-gray-600">You can use Digital Diary for daily journaling, project notes, reminders, saving news articles, and collaborating with others (Pro/Max plans).</p>
+            <summary className="font-semibold text-lg text-gray-800 cursor-pointer">What can I use JournIQ Diary for?</summary>
+            <p className="mt-2 text-gray-600">You can use JournIQ Diary for daily journaling, project notes, reminders, saving news articles, and collaborating with others (Pro/Max plans).</p>
           </details>
           <details className="mb-4 bg-white rounded-lg shadow p-4 border border-gray-100">
             <summary className="font-semibold text-lg text-gray-800 cursor-pointer">How much does it cost to use?</summary>
-            <p className="mt-2 text-gray-600">Digital Diary offers a free plan with core features, and paid plans for advanced productivity and team collaboration. See the plans above for details.</p>
+            <p className="mt-2 text-gray-600">JournIQ Diary offers a free plan with core features, and paid plans for advanced productivity and team collaboration. See the plans above for details.</p>
           </details>
           <details className="mb-4 bg-white rounded-lg shadow p-4 border border-gray-100">
             <summary className="font-semibold text-lg text-gray-800 cursor-pointer">Is my data private and secure?</summary>
