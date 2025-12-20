@@ -4,7 +4,13 @@ import Input from '../Common/Input'
 
 const RegisterForm = ({ registerForm, setRegisterForm, onRegister, onSwitchToLogin }) => {
   const handleInputChange = (field, value) => {
+    console.log('[TEST] RegisterForm - Field changed:', field, '-> Value:', value);
     setRegisterForm({ ...registerForm, [field]: value })
+  }
+
+  const handleRegisterClick = () => {
+    console.log('[TEST] RegisterForm - Register clicked with data:', { name: registerForm.name, email: registerForm.email, password: '***' });
+    onRegister();
   }
 
   return (
@@ -30,7 +36,7 @@ const RegisterForm = ({ registerForm, setRegisterForm, onRegister, onSwitchToLog
           onChange={(value) => handleInputChange('password', value)}
         />
         <Button
-          onClick={onRegister}
+          onClick={handleRegisterClick}
           className="w-full bg-green-500 hover:bg-green-600 p-3"
           text="Register"
         />

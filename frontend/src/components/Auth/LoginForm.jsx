@@ -4,7 +4,13 @@ import Input from '../Common/Input'
 
 const LoginForm = ({ loginForm, setLoginForm, onLogin, onSwitchToRegister }) => {
   const handleInputChange = (field, value) => {
+    console.log('[TEST] LoginForm - Field changed:', field, '-> Value:', value);
     setLoginForm({ ...loginForm, [field]: value })
+  }
+
+  const handleLoginClick = () => {
+    console.log('[TEST] LoginForm - Login clicked with data:', { email: loginForm.email, password: '***' });
+    onLogin();
   }
 
   // Get the backend URL dynamically
@@ -56,7 +62,7 @@ const LoginForm = ({ loginForm, setLoginForm, onLogin, onSwitchToRegister }) => 
               onChange={(value) => handleInputChange('password', value)}
             />
             <Button
-              onClick={onLogin}
+              onClick={handleLoginClick}
               className="w-full bg-gray-900 text-white font-bold p-3 shadow hover:bg-gray-800 transition-colors"
               text="Login"
             />

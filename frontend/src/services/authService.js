@@ -4,7 +4,12 @@ import axios from 'axios';
 const getApiUrl = () => {
   // In production (Vercel), VITE_API_URL should be set
   if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
+    let url = import.meta.env.VITE_API_URL;
+    // Ensure /api is at the end if not already there
+    if (!url.endsWith('/api')) {
+      url = url + '/api';
+    }
+    return url;
   }
   // In local dev, use localhost
   if (import.meta.env.DEV) {
@@ -31,7 +36,10 @@ const authService = {
   // Register new user
   async register(userData) {
     try {
+      console.log('[AUTH_DEBUG] Register - userData being sent:', userData);
+      console.log('[AUTH_DEBUG] Register - API URL:', API_BASE_URL);
       const response = await api.post('/auth/register', userData);
+      console.log('[AUTH_DEBUG] Register - Success response:', response.data);
       return {
         success: true,
         message: response.data.msg,
@@ -39,6 +47,12 @@ const authService = {
         errors: []
       };
     } catch (error) {
+      console.error('[AUTH_DEBUG] Register - Error:', {
+        status: error.response?.status,
+        message: error.response?.data?.msg,
+        errors: error.response?.data?.errors,
+        fullError: error
+      });
       return {
         success: false,
         message: error.response?.data?.msg || 'Network error. Please check your connection.',
@@ -51,7 +65,10 @@ const authService = {
   // Login user
   async login(credentials) {
     try {
+      console.log('[AUTH_DEBUG] Login - credentials being sent:', { email: credentials.email, password: '***' });
+      console.log('[AUTH_DEBUG] Login - API URL:', API_BASE_URL);
       const response = await api.post('/auth/login', credentials);
+      console.log('[AUTH_DEBUG] Login - Success response:', response.data);
       // Set the token in axios defaults for future requests
       if (response.data.token) {
         api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
@@ -63,6 +80,12 @@ const authService = {
         errors: []
       };
     } catch (error) {
+      console.error('[AUTH_DEBUG] Login - Error:', {
+        status: error.response?.status,
+        message: error.response?.data?.msg,
+        errors: error.response?.data?.errors,
+        fullError: error
+      });
       return {
         success: false,
         message: error.response?.data?.msg || 'Network error. Please check your connection.',
