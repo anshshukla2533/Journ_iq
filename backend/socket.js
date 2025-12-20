@@ -69,7 +69,7 @@ export default function setupSocket(server) {
         process.env.CLIENT_URL || 'http://localhost:5173',
         process.env.FRONTEND_URL || 'http://localhost:5173',
         process.env.VERCEL_FRONTEND_URL || 'http://localhost:5173',
-        'https://journ-iq-3ivl.vercel.app'
+        'https://journ-iq-93xs.vercel.app'
       ],
       methods: ['GET', 'POST'],
       credentials: true

@@ -46,9 +46,9 @@ NODE_ENV=production
 PORT=3000
 BACKEND_URL=https://your-render-service-name.onrender.com
 RENDER_EXTERNAL_URL=https://your-render-service-name.onrender.com
-FRONTEND_URL=https://journ-iq-3ivl.vercel.app
-VERCEL_FRONTEND_URL=https://journ-iq-3ivl.vercel.app
-CLIENT_URL=https://journ-iq-3ivl.vercel.app
+FRONTEND_URL=https://journ-iq-93xs.vercel.app
+VERCEL_FRONTEND_URL=https://journ-iq-93xs.vercel.app
+CLIENT_URL=https://journ-iq-93xs.vercel.app
 MONGODB_URI=your-mongodb-uri
 SESSION_SECRET=any-random-secret
 JWT_SECRET=any-random-long-secret
@@ -91,7 +91,7 @@ Go to GitHub OAuth app settings:
 
 - **Backend**: Wait for Render to deploy (2-3 min)
 - **Frontend**: Vercel will auto-redeploy (2-3 min)
-- **Test**: Go to https://journ-iq-3ivl.vercel.app and try login
+- **Test**: Go to https://journ-iq-93xs.vercel.app and try login
 
 ## 🔍 How the Dynamic URLs Work
 

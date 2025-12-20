@@ -55,9 +55,9 @@ JWT_EXPIRES_IN=7d
 Go to your Render app → Environment tab → Add these:
 
 ```
-FRONTEND_URL=https://journ-iq-3ivl.vercel.app
-VERCEL_FRONTEND_URL=https://journ-iq-3ivl.vercel.app
-CLIENT_URL=https://journ-iq-3ivl.vercel.app
+FRONTEND_URL=https://journ-iq-93xs.vercel.app
+VERCEL_FRONTEND_URL=https://journ-iq-93xs.vercel.app
+CLIENT_URL=https://journ-iq-93xs.vercel.app
 NODE_ENV=production
 PORT=3000
 BACKEND_URL=https://your-render-url
@@ -130,7 +130,7 @@ If you still see `localhost:3000` errors:
 
 ## Quick Reference: Your URLs
 
-- **Frontend**: https://journ-iq-3ivl.vercel.app
+- **Frontend**: https://journ-iq-93xs.vercel.app
 - **Backend**: https://your-render-url (get from Render dashboard)
 
 Once you get these working, test all these endpoints:
