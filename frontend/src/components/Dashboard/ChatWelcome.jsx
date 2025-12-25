@@ -2,7 +2,7 @@ import React from 'react';
 
 const ChatWelcome = () => {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center h-full bg-gradient-to-br from-gray-50 to-white p-8">
+    <div className="flex-1 flex flex-col items-center justify-start h-full bg-gradient-to-br from-gray-50 to-white p-8 pt-12">
       {/* Welcome Illustration */}
       <div className="mb-8 relative">
         <div className="w-32 h-32 bg-blue-100 rounded-full flex items-center justify-center">

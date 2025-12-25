@@ -18,6 +18,7 @@ const getApiUrl = () => {
 };
 
 const API_BASE_URL = getApiUrl();
+console.log('🚀 API_BASE_URL being used:', API_BASE_URL); // ADD THIS LINE
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -34,6 +35,3 @@ export function setAuthToken(token) {
     delete api.defaults.headers.common['Authorization'];
   }
 }
-
-
-
