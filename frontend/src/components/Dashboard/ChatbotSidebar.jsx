@@ -171,9 +171,9 @@ const ChatbotSidebar = () => {
       )}
 
       {isOpen && (
-        <div className="w-[420px] max-w-[95vw] bg-gradient-to-b from-gray-50 to-gray-100 border-l border-gray-200 h-screen flex flex-col fixed right-0 top-0 z-40 shadow-2xl">
+        <div className="w-[420px] max-w-[95vw] bg-gradient-to-b from-gray-50 to-gray-100 border-l border-gray-200 h-[100dvh] flex flex-col fixed right-0 top-0 z-40 shadow-2xl">
           {/* Header */}
-          <div className="p-5 bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 text-white">
+          <div className="p-5 bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 text-white flex-shrink-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-white to-blue-100 flex items-center justify-center font-bold text-lg border border-white/30 shadow-lg">
@@ -186,7 +186,7 @@ const ChatbotSidebar = () => {
               </div>
               <button 
                 onClick={() => setIsOpen(false)} 
-                className="text-white/80 hover:text-white hover:bg-white/20 p-2 rounded-lg transition-all duration-200 hover:scale-110" 
+                className="text-white/80 hover:text-white hover:bg-white/20 p-2 rounded-lg transition-all duration-200 hover:scale-110 flex-shrink-0" 
                 aria-label="Close"
               >
                 <X className="w-5 h-5" />
@@ -195,7 +195,7 @@ const ChatbotSidebar = () => {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-5 space-y-3">
+          <div className="flex-1 overflow-y-auto p-5 space-y-3 min-h-0">
             {messages.length === 0 && (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center space-y-4 max-w-sm px-4">
@@ -235,7 +235,7 @@ const ChatbotSidebar = () => {
           </div>
 
           {/* Input */}
-          <div className="p-5 bg-white border-t border-gray-200">
+          <div className="p-5 bg-white border-t border-gray-200 flex-shrink-0">
             <div className="flex items-end gap-2">
               <div className="flex-1 relative min-w-0">
                 <input
@@ -251,7 +251,7 @@ const ChatbotSidebar = () => {
               <button
                 onClick={handleSubmit}
                 disabled={loading || !input.trim()}
-                className="px-4 py-3 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-2xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md flex items-center gap-2 font-semibold text-sm hover:scale-105 duration-200"
+                className="px-4 py-3 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-2xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md flex items-center gap-2 font-semibold text-sm hover:scale-105 duration-200 flex-shrink-0"
               >
                 <Send className="w-4 h-4" />
               </button>
