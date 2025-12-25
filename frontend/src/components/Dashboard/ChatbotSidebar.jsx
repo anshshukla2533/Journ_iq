@@ -113,27 +113,27 @@ const ChatbotSidebar = () => {
     if (normalized.type === 'mixed') {
       return (
         <div key={index} className={`flex ${me ? 'justify-end' : 'justify-start'} mb-4`}>
-          <div className={`max-w-[85%] ${me ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white' : 'bg-white border border-gray-200'} rounded-2xl shadow-sm overflow-hidden`}>
+          <div className={`max-w-[85%] ${me ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-md' : 'bg-white border border-gray-200 shadow-sm'} rounded-2xl overflow-hidden`}>
             <div className="p-4 space-y-3">
               {normalized.content.map((chunk, i) => (
                 i % 2 === 0 ? (
-                  <div key={`t-${i}`} className={`text-sm leading-relaxed ${me ? 'text-white' : 'text-gray-800'}`}>
+                  <div key={`t-${i}`} className={`text-sm leading-relaxed font-medium ${me ? 'text-white' : 'text-gray-800'}`}>
                     {chunk}
                   </div>
                 ) : (
                   <div key={`c-${i}`} className="relative group">
-                    <pre className="text-xs leading-relaxed overflow-x-auto p-4 rounded-lg bg-gray-50 text-gray-800 font-mono border border-gray-200">
+                    <pre className="text-xs leading-relaxed overflow-x-auto p-4 rounded-lg bg-gray-900 text-gray-100 font-mono border border-gray-700 shadow-sm">
 {chunk}
                     </pre>
                     <button
                       onClick={() => copyToClipboard(chunk, `${index}-${i}`)}
-                      className="absolute top-2 right-2 p-1.5 rounded-md bg-white hover:bg-gray-100 border border-gray-200 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-3 right-3 p-1.5 rounded-md bg-gray-800 hover:bg-gray-700 border border-gray-600 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
                       title="Copy code"
                     >
                       {copiedIndex === `${index}-${i}` ? (
-                        <Check className="w-3.5 h-3.5 text-green-600" />
+                        <Check className="w-3.5 h-3.5 text-green-400" />
                       ) : (
-                        <Copy className="w-3.5 h-3.5 text-gray-600" />
+                        <Copy className="w-3.5 h-3.5 text-gray-300" />
                       )}
                     </button>
                   </div>
@@ -147,12 +147,12 @@ const ChatbotSidebar = () => {
 
     return (
       <div key={index} className={`flex ${me ? 'justify-end' : 'justify-start'} mb-4`}>
-        <div className={`max-w-[85%] rounded-2xl shadow-sm p-4 ${
+        <div className={`max-w-[85%] rounded-2xl shadow-md p-4 ${
           me 
-            ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white' 
+            ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white' 
             : 'bg-white border border-gray-200 text-gray-800'
         }`}>
-          <div className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</div>
+          <div className="text-sm leading-relaxed whitespace-pre-wrap font-medium">{message.content}</div>
         </div>
       </div>
     );
@@ -163,30 +163,30 @@ const ChatbotSidebar = () => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed right-6 bottom-20 z-30 bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-4 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2.5 group"
+          className="fixed right-6 bottom-20 z-30 bg-gradient-to-br from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-full shadow-lg hover:shadow-2xl transition-all duration-200 flex items-center gap-2.5 group hover:scale-110"
         >
-          <MessageSquare className="w-5 h-5 group-hover:scale-110 transition-transform" />
+          <span className="text-xl group-hover:rotate-12 transition-transform duration-300">✨</span>
           <span>Luna</span>
         </button>
       )}
 
       {isOpen && (
-        <div className="w-[420px] max-w-[95vw] bg-gray-50 border-l border-gray-200 h-screen flex flex-col fixed right-0 top-0 z-40 shadow-2xl">
+        <div className="w-[420px] max-w-[95vw] bg-gradient-to-b from-gray-50 to-gray-100 border-l border-gray-200 h-screen flex flex-col fixed right-0 top-0 z-40 shadow-2xl">
           {/* Header */}
-          <div className="p-5 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+          <div className="p-5 bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 text-white">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center font-semibold text-lg border border-white/30">
-                  L
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-white to-blue-100 flex items-center justify-center font-bold text-lg border border-white/30 shadow-lg">
+                  <span className="bg-gradient-to-br from-blue-600 to-indigo-600 bg-clip-text text-transparent">✨</span>
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold">Luna AI Assistant</h2>
-                  <p className="text-xs text-blue-100 mt-0.5">Powered by {GEMINI_MODEL}</p>
+                  <h2 className="text-lg font-bold tracking-tight">Luna</h2>
+                  <p className="text-xs text-blue-100 mt-0.5 font-medium">AI Assistant</p>
                 </div>
               </div>
               <button 
                 onClick={() => setIsOpen(false)} 
-                className="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-lg transition-colors" 
+                className="text-white/80 hover:text-white hover:bg-white/20 p-2 rounded-lg transition-all duration-200 hover:scale-110" 
                 aria-label="Close"
               >
                 <X className="w-5 h-5" />
@@ -195,18 +195,26 @@ const ChatbotSidebar = () => {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-5 space-y-1">
+          <div className="flex-1 overflow-y-auto p-5 space-y-3">
             {messages.length === 0 && (
               <div className="flex items-center justify-center h-full">
-                <div className="text-center space-y-3 max-w-sm">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center mx-auto">
-                    <MessageSquare className="w-8 h-8 text-blue-600" />
+                <div className="text-center space-y-4 max-w-sm px-4">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 via-blue-50 to-indigo-100 flex items-center justify-center mx-auto shadow-lg">
+                    <span className="text-4xl">✨</span>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-1">Welcome to Luna</h3>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Welcome to Luna</h3>
                     <p className="text-sm text-gray-600 leading-relaxed">
-                      Your intelligent AI assistant powered by Gemini. Ask me anything to get started.
+                      Your intelligent AI assistant. Ask questions, get code snippets, brainstorm ideas, and more!
                     </p>
+                  </div>
+                  <div className="pt-2 space-y-2">
+                    <p className="text-xs font-semibold text-gray-500 uppercase">Try asking:</p>
+                    <div className="space-y-2">
+                      <div className="bg-white border border-gray-200 rounded-lg p-3 text-xs text-gray-700 hover:bg-blue-50 cursor-pointer transition-colors">💡 "Explain React hooks"</div>
+                      <div className="bg-white border border-gray-200 rounded-lg p-3 text-xs text-gray-700 hover:bg-blue-50 cursor-pointer transition-colors">📝 "Write a function to sort an array"</div>
+                      <div className="bg-white border border-gray-200 rounded-lg p-3 text-xs text-gray-700 hover:bg-blue-50 cursor-pointer transition-colors">🎨 "Design tips for UI"</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -235,19 +243,20 @@ const ChatbotSidebar = () => {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Type your message..."
-                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent focus:bg-white transition-all text-sm"
+                  placeholder="Ask me anything..."
+                  className="w-full px-4 py-3 pr-12 border-2 border-gray-200 rounded-2xl bg-gray-50 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-0 focus:border-blue-600 focus:bg-white transition-all text-sm font-medium"
                   disabled={loading}
                 />
               </div>
               <button
                 onClick={handleSubmit}
                 disabled={loading || !input.trim()}
-                className="px-5 py-3 bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-sm flex items-center gap-2 font-medium text-sm"
+                className="px-4 py-3 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-2xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md flex items-center gap-2 font-semibold text-sm hover:scale-105 duration-200"
               >
                 <Send className="w-4 h-4" />
               </button>
             </div>
+          </div>
           </div>
         </div>
       )}
