@@ -113,7 +113,7 @@ const ChatbotSidebar = () => {
     if (normalized.type === 'mixed') {
       return (
         <div key={index} className={`flex ${me ? 'justify-end' : 'justify-start'} mb-4`}>
-          <div className={`max-w-[85%] ${me ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-md border border-blue-700/50' : 'bg-white border border-gray-300 shadow-sm'} rounded-xl overflow-hidden`}>
+          <div className={`max-w-[85%] ${me ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-md border border-blue-700/50' : 'bg-white border border-gray-300 shadow-sm'} rounded-3xl overflow-hidden`}>
             <div className="p-4 space-y-3">
               {normalized.content.map((chunk, i) => (
                 i % 2 === 0 ? (
@@ -122,12 +122,12 @@ const ChatbotSidebar = () => {
                   </div>
                 ) : (
                   <div key={`c-${i}`} className="relative group">
-                    <pre className="text-xs leading-relaxed overflow-x-auto p-4 rounded-lg bg-gray-900 text-gray-100 font-mono border border-gray-700 shadow-sm">
+                    <pre className="text-xs leading-relaxed overflow-x-auto p-4 rounded-2xl bg-gray-900 text-gray-100 font-mono border border-gray-700 shadow-sm">
 {chunk}
                     </pre>
                     <button
                       onClick={() => copyToClipboard(chunk, `${index}-${i}`)}
-                      className="absolute top-3 right-3 p-1.5 rounded-md bg-gray-800 hover:bg-gray-700 border border-gray-600 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-3 right-3 p-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-600 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
                       title="Copy code"
                     >
                       {copiedIndex === `${index}-${i}` ? (
@@ -147,7 +147,7 @@ const ChatbotSidebar = () => {
 
     return (
       <div key={index} className={`flex ${me ? 'justify-end' : 'justify-start'} mb-4`}>
-        <div className={`max-w-[85%] rounded-xl shadow-md p-4 ${
+        <div className={`max-w-[85%] rounded-3xl shadow-md p-4 ${
           me 
             ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white border border-blue-700/50' 
             : 'bg-white border border-gray-300 text-gray-800'
@@ -186,7 +186,7 @@ const ChatbotSidebar = () => {
               </div>
               <button 
                 onClick={() => setIsOpen(false)} 
-                className="text-white/80 hover:text-white hover:bg-white/20 p-2 rounded-lg transition-all duration-200 hover:scale-110 flex-shrink-0 border border-white/20 hover:border-white/40" 
+                className="text-white/80 hover:text-white hover:bg-white/20 p-2 rounded-2xl transition-all duration-200 hover:scale-110 flex-shrink-0 border border-white/20 hover:border-white/40" 
                 aria-label="Close"
               >
                 <X className="w-5 h-5" />
@@ -199,22 +199,14 @@ const ChatbotSidebar = () => {
             {messages.length === 0 && (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center space-y-4 max-w-sm px-4">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 via-blue-50 to-indigo-100 flex items-center justify-center mx-auto shadow-lg border border-blue-200/50">
+                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-100 via-blue-50 to-indigo-100 flex items-center justify-center mx-auto shadow-lg border border-blue-200/50">
                     <MessageSquare className="w-10 h-10 text-blue-600" />
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-gray-900 mb-2">Welcome to Luna</h3>
                     <p className="text-sm text-gray-600 leading-relaxed">
-                      Your intelligent AI assistant. Ask questions, get code snippets, brainstorm ideas, and more!
+                      Your intelligent AI assistant. Ask me anything to get started.
                     </p>
-                  </div>
-                  <div className="pt-2 space-y-2">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Try asking:</p>
-                    <div className="space-y-2">
-                      <div className="bg-white border border-gray-300 rounded-lg p-3 text-xs text-gray-700 hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-all">Explain React hooks</div>
-                      <div className="bg-white border border-gray-300 rounded-lg p-3 text-xs text-gray-700 hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-all">Write a sorting function</div>
-                      <div className="bg-white border border-gray-300 rounded-lg p-3 text-xs text-gray-700 hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-all">UI design best practices</div>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -244,14 +236,14 @@ const ChatbotSidebar = () => {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Ask me anything..."
-                  className="w-full px-4 py-3 pr-12 border-2 border-gray-300 rounded-xl bg-gray-50 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-0 focus:border-blue-600 focus:bg-white transition-all text-sm font-medium hover:border-gray-400"
+                  className="w-full px-4 py-3 pr-12 border-2 border-gray-300 rounded-2xl bg-gray-50 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-0 focus:border-blue-600 focus:bg-white transition-all text-sm font-medium hover:border-gray-400"
                   disabled={loading}
                 />
               </div>
               <button
                 onClick={handleSubmit}
                 disabled={loading || !input.trim()}
-                className="px-4 py-3 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md flex items-center gap-2 font-semibold text-sm hover:scale-105 duration-200 flex-shrink-0 border border-blue-700/50"
+                className="px-4 py-3 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-2xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md flex items-center gap-2 font-semibold text-sm hover:scale-105 duration-200 flex-shrink-0 border border-blue-700/50"
               >
                 <Send className="w-4 h-4" />
               </button>
