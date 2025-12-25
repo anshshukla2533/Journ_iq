@@ -9,7 +9,7 @@ const getApiUrl = () => {
     return 'http://localhost:3000/api';
   }
   // Production without env var - use relative URL
-  return '/api';
+  return 'https://journ-iq.onrender.com/api';
 };
 
 const API_BASE_URL = getApiUrl();
