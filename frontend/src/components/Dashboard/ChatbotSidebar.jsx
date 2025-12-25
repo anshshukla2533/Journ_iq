@@ -257,7 +257,6 @@ const ChatbotSidebar = () => {
               </button>
             </div>
           </div>
-          </div>
         </div>
       )}
     </>
