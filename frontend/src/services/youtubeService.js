@@ -1,11 +1,9 @@
-import axios from 'axios';
-
-const YOUTUBE_API = '/api/youtube/search';
+import { api } from './api';
 
 export const searchYouTube = async (query) => {
   if (!query || !query.trim()) return [];
   try {
-    const res = await axios.get(YOUTUBE_API, { params: { q: query } });
+    const res = await api.get('/youtube/search', { params: { q: query } });
     if (res.data && Array.isArray(res.data.items)) {
       return res.data.items
         .filter(item => item.id && item.id.videoId)
@@ -20,6 +18,7 @@ export const searchYouTube = async (query) => {
     }
     return [];
   } catch (err) {
+    console.error('YouTube search error:', err);
     return [];
   }
 };
