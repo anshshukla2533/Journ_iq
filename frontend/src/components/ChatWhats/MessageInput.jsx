@@ -53,11 +53,11 @@ export default function MessageInput({ contact, socket, user }) {
     display: 'flex',
     alignItems: 'flex-end',
     gap: '12px',
-    backgroundColor: '#fff',
-    border: '1px solid #e5e7eb',
-    borderRadius: '12px',
-    padding: '8px 12px',
-    boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+    backgroundColor: '#f5f5f5',
+    border: '1px solid #e0e0e0',
+    borderRadius: '20px',
+    padding: '10px 12px',
+    boxShadow: 'none',
   };
 
   const iconBtnStyle = {
@@ -72,15 +72,16 @@ export default function MessageInput({ contact, socket, user }) {
   const textareaStyle = {
     flex: 1,
     background: 'transparent',
-    color: '#111827',
-    fontSize: 14,
+    color: '#1f2937',
+    fontSize: 15,
     resize: 'none',
     outline: 'none',
     border: 'none',
-    maxHeight: 120,
+    maxHeight: 100,
     overflow: 'hidden',
-    lineHeight: 1.5,
+    lineHeight: 1.4,
     height: 40,
+    fontFamily: 'inherit',
   };
 
   const canSend = !!contact && !!text.trim() && !isSending;
@@ -89,10 +90,15 @@ export default function MessageInput({ contact, socket, user }) {
     padding: 8,
     borderRadius: 9999,
     border: 'none',
-    background: canSend ? 'linear-gradient(90deg,#22c55e,#16a34a)' : 'transparent',
-    color: canSend ? '#fff' : '#9ca3af',
-    boxShadow: canSend ? '0 2px 6px rgba(16,185,129,0.35)' : 'none',
+    background: canSend ? '#0ea5e9' : 'transparent',
+    color: canSend ? '#fff' : '#d1d5db',
+    boxShadow: 'none',
     cursor: canSend ? 'pointer' : 'not-allowed',
+    fontSize: 18,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'background 0.2s',
   };
 
   return (

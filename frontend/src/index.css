@@ -5,11 +5,13 @@
 /* Custom styles */
 html, body, #root {
   height: 100%;
+  margin: 0;
+  padding: 0;
 }
 body {
-  margin: 0;
-  background: #ffffff; /* Remove dark gradient to avoid black screen */
+  background: #ffffff;
   min-height: 100vh;
+  overflow: hidden;
 }
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',

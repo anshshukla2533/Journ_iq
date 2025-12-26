@@ -24,7 +24,7 @@ const DashboardHeader = ({ userName, onLogout }) => {
             </div>
             <Button
               onClick={onLogout}
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-2 text-sm font-semibold rounded-lg transition-all shadow-md hover:shadow-lg border border-red-400/50 hover:scale-105 duration-200"
               text="Logout"
             />
           </div>

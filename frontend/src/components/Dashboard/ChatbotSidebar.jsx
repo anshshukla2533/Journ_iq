@@ -163,7 +163,7 @@ const ChatbotSidebar = () => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed right-6 bottom-20 z-30 bg-gradient-to-br from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-full shadow-lg hover:shadow-2xl transition-all duration-200 flex items-center gap-2.5 group hover:scale-110 border border-blue-500/50"
+          className="fixed right-6 bottom-20 z-30 bg-gradient-to-br from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-4 px-6 rounded-full shadow-lg hover:shadow-2xl transition-all duration-200 flex items-center gap-2.5 group hover:scale-110 border-2 border-blue-400/60 hover:border-blue-300"
         >
           <MessageSquare className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
           <span>Luna</span>
@@ -171,9 +171,9 @@ const ChatbotSidebar = () => {
       )}
 
       {isOpen && (
-        <div className="w-[420px] max-w-[95vw] bg-gray-50 border-l border-gray-300 h-[100dvh] flex flex-col fixed right-0 top-0 z-40 shadow-2xl">
+        <div className="w-[420px] max-w-[95vw] bg-gray-50 border-2 border-blue-400/60 h-[75vh] flex flex-col fixed right-6 bottom-20 z-40 shadow-2xl rounded-3xl">
           {/* Header */}
-          <div className="p-5 bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 text-white flex-shrink-0 border-b border-blue-700/50">
+          <div className="p-5 bg-gradient-to-r from-blue-600 via-blue-600 to-indigo-600 text-white flex-shrink-0 border-b border-blue-700/50 rounded-t-3xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center font-bold text-lg border border-white/30 shadow-lg backdrop-blur-sm">
@@ -199,7 +199,7 @@ const ChatbotSidebar = () => {
             {messages.length === 0 && (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center space-y-4 max-w-sm px-4">
-                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-100 via-blue-50 to-indigo-100 flex items-center justify-center mx-auto shadow-lg border border-blue-200/50">
+                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-100 via-blue-50 to-indigo-100 flex items-center justify-center mx-auto shadow-lg border-2 border-blue-400/70 hover:border-blue-500">
                     <MessageSquare className="w-10 h-10 text-blue-600" />
                   </div>
                   <div>
