@@ -28,8 +28,8 @@ const LoginForm = ({ loginForm, setLoginForm, onLogin, onSwitchToRegister }) => 
 
   return (
     <div className="w-full flex items-center justify-center">
-      <div className="bg-white rounded-2xl shadow-xl p-10 w-full max-w-md flex flex-col items-center">
-        <h1 className="text-4xl font-extrabold text-center mb-6 text-gray-900 tracking-tight">
+      <div className="bg-white rounded-2xl shadow-xl p-6 md:p-10 w-full max-w-md flex flex-col items-center">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-center mb-6 text-gray-900 tracking-tight">
           JournIQ
         </h1>
             <button

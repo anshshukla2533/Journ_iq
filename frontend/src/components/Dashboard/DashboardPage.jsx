@@ -151,12 +151,29 @@ const DashboardPage = ({ user, news, savedNotes, onLogout, onFetchNews }) => {
           });
         }
       };
+
+      const handleTouchMove = e => {
+        if (dragging && e.touches.length > 0) {
+          const maxY = window.innerHeight - (isMobile ? 150 : 120);
+          setPos({
+            x: Math.max(0, Math.min(window.innerWidth - 400, e.touches[0].clientX - dragOffset.current.x)),
+            y: Math.max(0, Math.min(maxY, e.touches[0].clientY - dragOffset.current.y)),
+          });
+        }
+      };
+
       const handleMouseUp = () => setDragging(false);
+      const handleTouchEnd = () => setDragging(false);
+
       window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('touchmove', handleTouchMove, { passive: false });
       window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('touchend', handleTouchEnd);
       return () => {
         window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('touchmove', handleTouchMove);
         window.removeEventListener('mouseup', handleMouseUp);
+        window.removeEventListener('touchend', handleTouchEnd);
       };
     }, [dragging, isMobile]);
 
@@ -189,10 +206,16 @@ const DashboardPage = ({ user, news, savedNotes, onLogout, onFetchNews }) => {
       >
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-0 flex flex-col items-center border border-gray-200 dark:border-gray-700 w-full">
           <div
-            className="w-full h-6 bg-gray-200 dark:bg-gray-700 rounded-t-2xl cursor-move flex items-center justify-center text-xs text-gray-500 select-none"
+            className="w-full h-6 bg-gray-200 dark:bg-gray-700 rounded-t-2xl cursor-move flex items-center justify-center text-xs text-gray-500 select-none touch-none"
             onMouseDown={e => {
               setDragging(true);
               dragOffset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
+            }}
+            onTouchStart={e => {
+              if (e.touches.length > 0) {
+                setDragging(true);
+                dragOffset.current = { x: e.touches[0].clientX - pos.x, y: e.touches[0].clientY - pos.y };
+              }
             }}
           >
             Drag to move

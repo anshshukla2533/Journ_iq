@@ -69,7 +69,7 @@ function App() {
   }
 
   return (
-    <div className="App min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-blue-50">
+    <div className={`App min-h-screen w-full bg-gradient-to-br from-blue-50 via-white to-blue-50 ${location.pathname === '/login' ? 'auth-mode' : ''}`}>
       <div className="w-full">
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />

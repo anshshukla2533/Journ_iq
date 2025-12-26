@@ -90,9 +90,9 @@ const AuthPage = ({
         </nav>
         <button onClick={() => scrollToRef(loginRef)} className="bg-white text-indigo-600 font-bold rounded-lg md:rounded-xl px-3 md:px-6 py-2 md:py-2 text-sm md:text-lg shadow hover:bg-gray-100 transition">Get started</button>
       </header>
-      <div className="auth-page min-h-screen w-full flex flex-col md:flex-row bg-[#fcfbfa]">
+      <div className="auth-page w-full flex flex-col md:flex-row md:min-h-screen bg-[#fcfbfa]">
         {}
-        <div ref={featuresRef} className="flex-1 flex flex-col justify-center items-center px-8 py-12 md:py-0 bg-[#fcfbfa]">
+        <div ref={featuresRef} className="hidden md:flex md:flex-1 flex-col justify-center items-center px-8 py-12 bg-[#fcfbfa]">
           <div className="max-w-lg w-full">
             <div className="flex items-center mb-6">
               <svg className="w-10 h-10 mr-2 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -140,8 +140,8 @@ const AuthPage = ({
           </div>
         </div>
         {}
-        <div ref={loginRef} className="flex-1 flex flex-col justify-center items-center px-8 py-12 md:py-0 bg-[#f6f5f2]">
-          <div className="w-full max-w-md">
+        <div ref={loginRef} className="w-full md:flex-1 flex flex-col justify-center items-center px-8 py-12 md:py-0 bg-[#f6f5f2]">
+          <div className="w-full max-w-md min-h-fit">
             {authMode === 'login' ? (
               <LoginForm
                 loginForm={loginForm}

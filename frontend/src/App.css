@@ -12,6 +12,12 @@
   overflow: hidden;
 }
 
+.App.auth-mode {
+  height: auto;
+  min-height: 100vh;
+  overflow-y: auto;
+}
+
 .dashboard-page {
   height: 100vh;
   overflow: hidden !important;
@@ -20,5 +26,10 @@
 @media (max-width: 768px) {
   .App {
     padding: 0;
+  }
+  
+  .App.auth-mode {
+    height: auto;
+    overflow-y: auto;
   }
 }
