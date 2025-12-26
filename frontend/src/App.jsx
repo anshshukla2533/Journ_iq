@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import AuthPage from './components/Auth/AuthPage';
 import LoadingTransition from './components/Common/LoadingTransition';
@@ -14,36 +14,24 @@ function App() {
   const { news, fetchNews } = useNews();
   const location = useLocation();
   const navigate = useNavigate();
-  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Check authentication status on initial load
+  // Redirect logic in useEffect
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const isAuthenticated = await auth.checkAuthStatus();
-        setIsInitialized(true);
-        if (!isAuthenticated && location.pathname !== '/login') {
-          navigate('/login', { replace: true });
-        }
-      } catch (error) {
-        console.error('Auth check failed:', error);
-        setIsInitialized(true);
-        navigate('/login', { replace: true });
-      }
-    };
-    checkAuth();
-  }, []);
+    // Skip redirects while loading
+    if (auth.isLoading) return;
 
-  // Handle routing after auth check
-  useEffect(() => {
-    if (!isInitialized) return;
-
-    if (!auth.token && location.pathname !== '/login') {
-      navigate('/login', { replace: true });
-    } else if (auth.token && location.pathname === '/login') {
+    // Redirect to dashboard if authenticated and on login page
+    if (auth.token && location.pathname === '/login') {
       navigate('/dashboard', { replace: true });
+      return;
     }
-  }, [auth.token, location.pathname, navigate, isInitialized]);
+    
+    // Redirect to login if not authenticated and on dashboard
+    if (!auth.token && location.pathname.startsWith('/dashboard')) {
+      navigate('/login', { replace: true });
+      return;
+    }
+  }, [auth.token, auth.isLoading, location.pathname, navigate]);
 
   useEffect(() => {
     if (auth.user && location.pathname.startsWith('/dashboard')) {
@@ -63,8 +51,17 @@ function App() {
     navigate('/', { replace: true });
   };
 
-  // Use the loading transition component
+  // Show loading transition during initial auth check
   if (auth.isLoading) {
+    return <LoadingTransition />;
+  }
+
+  // Prevent rendering Routes if we're in a mismatch state (redirect needed)
+  // This prevents the login page from briefly showing when user is authenticated
+  const isAuthMismatch = (auth.token && location.pathname === '/login') || 
+                         (!auth.token && location.pathname.startsWith('/dashboard'));
+  
+  if (isAuthMismatch) {
     return <LoadingTransition />;
   }
 
@@ -86,6 +83,7 @@ function App() {
                 setRegisterForm={auth.setRegisterForm}
                 onLogin={handleLogin}
                 onRegister={auth.register}
+                isLoading={auth.isLoading}
               />
             )
           } />

@@ -10,7 +10,8 @@ const AuthPage = ({
   registerForm, 
   setRegisterForm, 
   onLogin, 
-  onRegister 
+  onRegister,
+  isLoading = false 
 }) => {
 
   
@@ -148,6 +149,7 @@ const AuthPage = ({
                 setLoginForm={setLoginForm}
                 onLogin={onLogin}
                 onSwitchToRegister={() => setAuthMode('register')}
+                isLoading={isLoading}
               />
             ) : (
               <RegisterForm

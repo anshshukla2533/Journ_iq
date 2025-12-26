@@ -10,7 +10,50 @@ const useAuth = () => {
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [registerForm, setRegisterForm] = useState({ name: '', email: '', password: '' });
 
- 
+  // Initialize from localStorage synchronously
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    const storedToken = localStorage.getItem('token');
+    
+    if (storedToken) {
+      setToken(storedToken);
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser));
+        } catch (e) {
+          setUser(null);
+        }
+      }
+    }
+    
+    // Then verify with the backend
+    const verifyAuth = async () => {
+      if (storedToken) {
+        try {
+          const response = await authService.getCurrentUser(storedToken);
+          if (response.success && response.data) {
+            setUser({ 
+              _id: response.data._id || response.data.id,
+              id: response.data._id || response.data.id,
+              name: response.data.name,
+              email: response.data.email
+            });
+          } else {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            setToken(null);
+            setUser(null);
+          }
+        } catch (e) {
+          console.error('Failed to verify auth session:', e);
+        }
+      }
+      setIsLoading(false);
+    };
+
+    verifyAuth();
+  }, []);
+  
   const checkAuthStatus = async () => {
     setIsLoading(true);
     try {
@@ -46,16 +89,6 @@ const useAuth = () => {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    
-    const initAuth = async () => {
-      setIsLoading(true);
-      await checkAuthStatus();
-      setIsLoading(false);
-    };
-    initAuth();
-  }, []);
 
   useEffect(() => {
     if (user && token) {

@@ -2,7 +2,7 @@ import React from 'react'
 import Button from '../Common/Button'
 import Input from '../Common/Input'
 
-const LoginForm = ({ loginForm, setLoginForm, onLogin, onSwitchToRegister }) => {
+const LoginForm = ({ loginForm, setLoginForm, onLogin, onSwitchToRegister, isLoading = false }) => {
   const handleInputChange = (field, value) => {
     console.log('[TEST] LoginForm - Field changed:', field, '-> Value:', value);
     setLoginForm({ ...loginForm, [field]: value })
@@ -54,17 +54,24 @@ const LoginForm = ({ loginForm, setLoginForm, onLogin, onSwitchToRegister }) => 
               placeholder="Username"
               value={loginForm.email}
               onChange={(value) => handleInputChange('email', value)}
+              disabled={isLoading}
             />
             <Input
               type="password"
               placeholder="Password"
               value={loginForm.password}
               onChange={(value) => handleInputChange('password', value)}
+              disabled={isLoading}
             />
             <Button
               onClick={handleLoginClick}
-              className="w-full bg-gray-900 text-white font-bold p-3 shadow hover:bg-gray-800 transition-colors"
-              text="Login"
+              className={`w-full bg-gray-900 text-white font-bold p-3 shadow transition-colors ${
+                isLoading 
+                  ? 'bg-gray-500 cursor-not-allowed' 
+                  : 'hover:bg-gray-800'
+              }`}
+              text={isLoading ? 'Logging in...' : 'Login'}
+              disabled={isLoading}
             />
            
           </div>
@@ -72,7 +79,8 @@ const LoginForm = ({ loginForm, setLoginForm, onLogin, onSwitchToRegister }) => 
             <p className="text-gray-500">Don't have an account?</p>
             <button
               onClick={onSwitchToRegister}
-              className="text-gray-900 hover:text-gray-700 font-bold mt-2 underline text-lg transition-colors"
+              disabled={isLoading}
+              className="text-gray-900 hover:text-gray-700 font-bold mt-2 underline text-lg transition-colors disabled:text-gray-400 disabled:cursor-not-allowed"
             >
               Sign Up
             </button>

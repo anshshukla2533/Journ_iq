@@ -6,7 +6,8 @@ const Input = ({
   value, 
   onChange, 
   className = '', 
-  required = false 
+  required = false,
+  disabled = false 
 }) => {
   const baseClasses = 'w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200'
   
@@ -17,7 +18,8 @@ const Input = ({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       required={required}
-      className={`${baseClasses} ${className}`}
+      disabled={disabled}
+      className={`${baseClasses} ${className} ${disabled ? 'bg-gray-100 cursor-not-allowed opacity-60' : ''}`}
     />
   )
 }
