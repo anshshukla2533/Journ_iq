@@ -3,6 +3,7 @@ import ContactsList from './ContactsList';
 import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
+import ThreeDAnimation from './ThreeDAnimation';
 import { createSocket } from '../../services/socket';
 import { api, setAuthToken } from '../../services/api';
 import useAuth from '../../hooks/useAuth';
@@ -169,53 +170,40 @@ export default function ChatContainer() {
               </div>
             </>
           ) : (
-            // Welcome Screen
-            <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white">
-              <div className="mb-6 relative">
-                <div className="w-32 h-32 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center shadow-lg">
-                  <svg className="w-16 h-16 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                </div>
-                <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center shadow-md">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                </div>
+            // Welcome Screen - Video
+            <div className="flex-1 flex items-center justify-center p-4 sm:p-8 bg-gradient-to-br from-gray-50 via-white to-gray-50 overflow-hidden">
+              {/* Soft background elements */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-1/4 -left-20 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-5 animate-pulse"></div>
+                <div className="absolute top-1/3 -right-20 w-72 h-72 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-5 animate-pulse delay-2000"></div>
+                <div className="absolute -bottom-8 left-1/2 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-5 animate-pulse delay-1000"></div>
               </div>
 
-              <h2 className="text-2xl font-semibold text-gray-800 mb-2 text-center">
-                Select a chat to start messaging
-              </h2>
-              <p className="text-gray-500 mb-8 text-center max-w-md">
-                Choose a contact from the list to begin your conversation
-              </p>
+              {/* Video */}
+              <div className="relative z-10 w-full max-w-2xl h-48 sm:h-56 md:h-72 lg:h-96 px-2">
+                {/* Video container */}
+                <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-lg transform hover:scale-105 transition-transform duration-500">
+                  {/* Subtle border */}
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-100/20 via-transparent to-indigo-100/20 pointer-events-none z-10 border border-gray-200"></div>
+                  
+                  {/* Video */}
+                  <video
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="w-full h-full object-cover"
+                  >
+                    <source src="/src/assets/chatsidebar.mp4" type="video/mp4" />
+                  </video>
 
-              {/* Feature Pills */}
-              <div className="flex flex-wrap justify-center gap-2 max-w-lg">
-                <span className="px-4 py-2 bg-blue-50 text-blue-600 rounded-full text-sm font-medium">
-                  💬 Real-time Chat
-                </span>
-                <span className="px-4 py-2 bg-green-50 text-green-600 rounded-full text-sm font-medium">
-                  📞 Voice Calls
-                </span>
-                <span className="px-4 py-2 bg-purple-50 text-purple-600 rounded-full text-sm font-medium">
-                  🎥 Video Calls
-                </span>
-                <span className="px-4 py-2 bg-yellow-50 text-yellow-600 rounded-full text-sm font-medium">
-                  📝 Share Notes
-                </span>
+                  {/* Subtle shine effect */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white via-transparent to-transparent opacity-5 pointer-events-none rounded-2xl"></div>
+                </div>
+
+                {/* Subtle glow effect */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-200 via-indigo-200 to-purple-200 rounded-2xl blur-xl opacity-10 -z-10 animate-pulse"></div>
               </div>
-
-              {/* Mobile: Show contacts button */}
-              {isMobile && (
-                <button
-                  onClick={() => setShowSidebar(true)}
-                  className="mt-8 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-md"
-                >
-                  View Contacts
-                </button>
-              )}
             </div>
           )}
         </div>

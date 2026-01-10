@@ -9,6 +9,8 @@ export default function SearchPanel({ onOpenChat }) {
   const [friendsResults, setFriendsResults] = useState([]);
   const [status, setStatus] = useState('idle');
   const [info, setInfo] = useState('');
+  const [sentRequests, setSentRequests] = useState(new Set());
+  const [loading, setLoading] = useState({});
 
   useEffect(() => {
     if (token) setAuthToken(token);
@@ -71,6 +73,24 @@ export default function SearchPanel({ onOpenChat }) {
     </div>
   );
 
+  const handleAddFriend = async (friendId, friendEmail) => {
+    try {
+      setLoading(prev => ({ ...prev, [friendId]: true }));
+      const response = await api.post('/friends/send', { receiverId: friendId });
+      
+      if (response.data?.request?._id) {
+        setSentRequests(prev => new Set([...prev, friendId]));
+        setInfo(`Friend request sent to ${friendEmail}!`);
+        setTimeout(() => setInfo(''), 3000);
+      }
+    } catch (error) {
+      console.error('Failed to send friend request', error);
+      setInfo(error.response?.data?.message || 'Failed to send friend request');
+    } finally {
+      setLoading(prev => ({ ...prev, [friendId]: false }));
+    }
+  };
+
   const renderFriend = (friend) => (
     <div key={friend._id} className="border border-gray-100 rounded-lg p-4 flex flex-col gap-2">
       <div className="flex items-center justify-between">
@@ -89,6 +109,17 @@ export default function SearchPanel({ onOpenChat }) {
         >
           {friend.online ? 'Open chat' : 'View'
           }
+        </button>
+        <button
+          onClick={() => handleAddFriend(friend._id, friend.email)}
+          disabled={sentRequests.has(friend._id) || loading[friend._id]}
+          className={`flex-1 text-sm font-semibold px-3 py-2 rounded-lg transition ${
+            sentRequests.has(friend._id)
+              ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+              : 'bg-green-50 text-green-600 hover:bg-green-100'
+          }`}
+        >
+          {loading[friend._id] ? 'Adding...' : sentRequests.has(friend._id) ? 'Request Sent' : 'Add Friend'}
         </button>
       </div>
     </div>

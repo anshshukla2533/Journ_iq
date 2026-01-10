@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Button from '../Common/Button';
 import useAuth from '../../hooks/useAuth';
 import notesService from '../../services/notesService';
+import ShareNoteModal from './ShareNoteModal';
 
 const DoodleAccent = ({ className = '' }) => (
   <svg
@@ -41,6 +42,8 @@ const SavedNotes = ({ onSelectForShare }) => {
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState('');
   const [selectedForShareId, setSelectedForShareId] = useState(null);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [noteToShare, setNoteToShare] = useState(null);
 
 
 
@@ -134,6 +137,16 @@ const SavedNotes = ({ onSelectForShare }) => {
   const handleCancelEdit = () => {
     setEditingId(null);
     setEditText('');
+  };
+
+  const handleOpenShareModal = (note) => {
+    setNoteToShare(note);
+    setShareModalOpen(true);
+  };
+
+  const handleCloseShareModal = () => {
+    setShareModalOpen(false);
+    setNoteToShare(null);
   };
 
   const formatDate = (dateString) => {
@@ -265,7 +278,7 @@ const SavedNotes = ({ onSelectForShare }) => {
                         )}
                       </div>
                     </div>
-                    <div className="flex space-x-2 items-center">
+                    <div className="flex space-x-2 items-center flex-wrap gap-2">
                       <Button
                         onClick={() => handleEditNote(note)}
                         className="bg-yellow-500 hover:bg-yellow-600 px-3 py-1 text-sm"
@@ -277,19 +290,10 @@ const SavedNotes = ({ onSelectForShare }) => {
                         text="Delete"
                       />
                       <button
-                        className={`ml-2 px-3 py-1 text-sm rounded ${selectedForShareId === note._id ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'}`}
-                        onClick={() => {
-                          if (selectedForShareId === note._id) {
-                            setSelectedForShareId(null);
-                            if (typeof onSelectForShare === 'function') onSelectForShare(null);
-                          } else {
-                            setSelectedForShareId(note._id);
-                            if (typeof onSelectForShare === 'function') onSelectForShare(note);
-                            alert('Selected this note for sharing. Now open Friends and choose a friend to share with.');
-                          }
-                        }}
+                        onClick={() => handleOpenShareModal(note)}
+                        className="ml-2 px-3 py-1 text-sm rounded bg-green-100 text-green-700 hover:bg-green-200 font-semibold transition"
                       >
-                        {selectedForShareId === note._id ? 'Selected' : 'Share'}
+                        Share
                       </button>
                     </div>
                   </div>
@@ -303,6 +307,17 @@ const SavedNotes = ({ onSelectForShare }) => {
               <p className="text-gray-400">Write your first note above to get started.</p>
             </div>
         )}
+
+      {/* Share Note Modal */}
+      <ShareNoteModal
+        note={noteToShare}
+        isOpen={shareModalOpen}
+        onClose={handleCloseShareModal}
+        onShared={() => {
+          // Refresh notes after sharing
+          loadNotes();
+        }}
+      />
       </div>
     </div>
   );

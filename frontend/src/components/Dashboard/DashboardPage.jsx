@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import frontpageVideo from '../../assets/frontpage.mp4';
 
 import DashboardHeader from './DashboardHeader';
 import NewsSection from './NewsSection';
@@ -365,9 +366,7 @@ const DashboardPage = ({ user, news, savedNotes, onLogout, onFetchNews }) => {
                             <div className="flex gap-4">
                               <div className="flex-shrink-0">
                                 <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-blue-100">
-                                  <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                  </svg>
+                                 
                                 </div>
                               </div>
                               <div className="flex-1">
@@ -382,9 +381,7 @@ const DashboardPage = ({ user, news, savedNotes, onLogout, onFetchNews }) => {
                             <div className="flex gap-4">
                               <div className="flex-shrink-0">
                                 <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-green-100">
-                                  <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                  </svg>
+                                  
                                 </div>
                               </div>
                               <div className="flex-1">
@@ -399,9 +396,7 @@ const DashboardPage = ({ user, news, savedNotes, onLogout, onFetchNews }) => {
                             <div className="flex gap-4">
                               <div className="flex-shrink-0">
                                 <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-purple-100">
-                                  <svg className="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                  </svg>
+                                 
                                 </div>
                               </div>
                               <div className="flex-1">
@@ -415,39 +410,21 @@ const DashboardPage = ({ user, news, savedNotes, onLogout, onFetchNews }) => {
                         </div>
                       </div>
 
-                      {/* Right side - Illustration or Stats */}
-                      <div className="hidden lg:flex items-center justify-center p-4">
-                        <div className="relative">
-                          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-3xl blur-2xl opacity-20"></div>
-                          <div className="relative bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-8 border border-blue-100">
-                            <div className="space-y-6">
-                              <div className="text-center">
-                                <div className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
-                                  70%
-                                </div>
-                                <p className="text-gray-600 text-sm mt-2">Reduction in app-switching</p>
-                              </div>
-                              
-                              <div className="text-center">
-                                <div className="text-4xl font-bold bg-gradient-to-r from-green-600 to-teal-600 text-transparent bg-clip-text">
-                                  50%
-                                </div>
-                                <p className="text-gray-600 text-sm mt-2">Faster content retrieval</p>
-                              </div>
-
-                              <div className="text-center">
-                                <div className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 text-transparent bg-clip-text">
-                                  200+
-                                </div>
-                                <p className="text-gray-600 text-sm mt-2">Active users</p>
-                              </div>
-
-                              <div className="pt-4 border-t border-blue-200">
-                                <p className="text-center text-gray-700 font-medium text-sm">
-                                  ✨ Powered by AI & Real-Time Tech
-                                </p>
-                              </div>
-                            </div>
+                      {/* Right side - Front Page Video */}
+                      <div className="flex items-center justify-center p-2 w-full lg:w-auto">
+                        <div className="relative w-full max-w-2xl h-64 sm:h-72 md:h-80 lg:h-96 rounded-3xl overflow-hidden opacity-90">
+                          {/* Video container with subtle background blend */}
+                          <div className="relative w-full h-full rounded-3xl overflow-hidden bg-gradient-to-b from-gray-100 to-gray-50">
+                            <video
+                              autoPlay
+                              muted
+                              loop
+                              playsInline
+                              className="w-full h-full object-cover rounded-3xl opacity-95"
+                              src={frontpageVideo}
+                            >
+                              Your browser does not support the video tag.
+                            </video>
                           </div>
                         </div>
                       </div>

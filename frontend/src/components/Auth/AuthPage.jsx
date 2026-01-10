@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react'
 import LoginForm from './LoginForm'
 import RegisterForm from './RegisterForm'
+import claudeLoginVideo from '../../assets/claude_login.mp4'
 
 const AuthPage = ({ 
   authMode, 
@@ -93,7 +94,7 @@ const AuthPage = ({
       </header>
       <div className="auth-page w-full flex flex-col md:flex-row md:min-h-screen bg-[#fcfbfa]">
         {}
-        <div ref={featuresRef} className="hidden md:flex md:flex-1 flex-col justify-center items-center px-8 py-12 bg-[#fcfbfa]">
+        <div ref={featuresRef} className="w-full md:flex-1 flex flex-col justify-center items-center px-4 md:px-8 py-8 md:py-12 bg-[#fcfbfa]">
           <div className="max-w-lg w-full">
             <div className="flex items-center mb-6">
               <svg className="w-10 h-10 mr-2 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,42 +103,25 @@ const AuthPage = ({
               <span className="text-2xl font-bold tracking-tight text-gray-900">JournIQ</span>
             </div>
             <h1 className="text-5xl font-extrabold text-gray-900 mb-4 leading-tight">Your ideas, amplified</h1>
-            <p className="text-xl text-gray-700 mb-8">Privacy-first diary that helps you create, organize, and reflect in confidence.</p>
-            <div className="mb-10">
-              <h2 className="text-xl font-bold text-gray-900 mb-3">Features</h2>
-              <ul className="list-none text-gray-700 space-y-3">
-                <li className="flex items-center">
-                  <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  Save and organize your notes
-                </li>
-                <li className="flex items-center">
-                  <svg className="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  Search and edit notes instantly
-                </li>
-                <li className="flex items-center">
-                  <svg className="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                  </svg>
-                  Stay updated with the latest news
-                </li>
-                <li className="flex items-center">
-                  <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-                  </svg>
-                  Modern, minimal interface
-                </li>
-                <li className="flex items-center">
-                  <svg className="w-5 h-5 mr-2 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                  Secure login and registration
-                </li>
-              </ul>
+            <p className="text-xl text-gray-700 mb-6">Helps you create,collaborate, organize, and reflect in confidence.</p>
+          
+         
+
+            {/* Video Demo - Responsive */}
+            <div className="mb-8 rounded-xl overflow-hidden shadow-2xl h-48 sm:h-56 md:h-72 lg:h-96 border-2 border-gray-200 w-full">
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="w-full h-full object-cover"
+                src="/src/assets/claude_login.mp4"
+              >
+                Your browser does not support the video tag.
+              </video>
             </div>
+
+            
           </div>
         </div>
         {}

@@ -179,6 +179,34 @@ const notesService = {
         data: null
       }
     }
+  },
+
+  // Share note with a friend
+  async shareNote(token, noteId, userId) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/noteShare/share`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ noteId, userId }),
+      })
+
+      const data = await response.json()
+
+      return {
+        success: data.success,
+        message: data.msg || 'Note shared successfully',
+        data: data.data || null
+      }
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Failed to share note',
+        data: null
+      }
+    }
   }
 }
 
