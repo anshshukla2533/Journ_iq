@@ -314,8 +314,8 @@ const SavedNotes = ({ onSelectForShare }) => {
         isOpen={shareModalOpen}
         onClose={handleCloseShareModal}
         onShared={() => {
-          // Refresh notes after sharing
-          loadNotes();
+          // Note shared successfully - no need to refresh the list
+          // The ShareNoteModal handles the UI state internally
         }}
       />
       </div>
