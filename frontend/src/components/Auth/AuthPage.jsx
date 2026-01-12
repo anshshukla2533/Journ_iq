@@ -106,7 +106,7 @@ const AuthPage = ({
             <p className="text-xl text-gray-700 mb-6">Helps you create,collaborate, organize, and reflect in confidence.</p>
 
             {/* Video Demo - Responsive */}
-            <div className="mb-8 rounded-xl overflow-hidden shadow-2xl h-48 sm:h-56 md:h-72 lg:h-96 border-2 border-gray-200 w-full">
+            <div className="mb-8 rounded-xl overflow-hidden h-48 sm:h-56 md:h-72 lg:h-96 w-full">
               <img
                 src={authGif}
                 alt="JournIQ Demo"

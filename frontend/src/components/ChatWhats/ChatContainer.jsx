@@ -7,6 +7,7 @@ import ThreeDAnimation from './ThreeDAnimation';
 import { createSocket } from '../../services/socket';
 import { api, setAuthToken } from '../../services/api';
 import useAuth from '../../hooks/useAuth';
+import chatSidebarVideo from '../../assets/chatsidebar.mp4';
 
 export default function ChatContainer() {
   const { token, user } = useAuth();
@@ -193,9 +194,8 @@ export default function ChatContainer() {
                     loop
                     playsInline
                     className="w-full h-full object-cover"
-                  >
-                    <source src="/src/assets/chatsidebar.mp4" type="video/mp4" />
-                  </video>
+                    src={chatSidebarVideo}
+                  />
 
                   {/* Subtle shine effect */}
                   <div className="absolute inset-0 bg-gradient-to-br from-white via-transparent to-transparent opacity-5 pointer-events-none rounded-2xl"></div>

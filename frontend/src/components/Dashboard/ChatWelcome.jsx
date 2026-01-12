@@ -1,4 +1,5 @@
 import React from 'react';
+import chatSidebarVideo from '../../assets/chatsidebar.mp4';
 
 const ChatWelcome = () => {
   return (
@@ -45,9 +46,8 @@ const ChatWelcome = () => {
               loop
               playsInline
               className="w-full h-full object-cover"
-            >
-              <source src="/src/assets/chatsidebar.mp4" type="video/mp4" />
-            </video>
+              src={chatSidebarVideo}
+            />
           </div>
         </div>
       </div>
