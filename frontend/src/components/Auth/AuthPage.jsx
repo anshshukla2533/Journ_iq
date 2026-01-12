@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react'
 import LoginForm from './LoginForm'
 import RegisterForm from './RegisterForm'
-import claudeLoginVideo from '../../assets/claude_login.mp4'
+import authGif from '../../assets/auth.gif'
 
 const AuthPage = ({ 
   authMode, 
@@ -105,20 +105,20 @@ const AuthPage = ({
             <h1 className="text-5xl font-extrabold text-gray-900 mb-4 leading-tight">Your ideas, amplified</h1>
             <p className="text-xl text-gray-700 mb-6">Helps you create,collaborate, organize, and reflect in confidence.</p>
           
-         
+            {/* Ecosystem Stats */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 mb-8 border border-blue-100">
+              <p className="text-sm font-semibold text-gray-900 mb-2">All-in-One Learning Ecosystem</p>
+              <p className="text-gray-700 text-sm leading-relaxed">Consolidate YouTube, news feeds, web search, and collaborative notes in one platform. Reduce app-switching by 70% for enhanced productivity.</p>
+              <p className="text-xs text-gray-600 mt-3 font-medium">✓ 200+ active users trusting JournIQ</p>
+            </div>
 
             {/* Video Demo - Responsive */}
             <div className="mb-8 rounded-xl overflow-hidden shadow-2xl h-48 sm:h-56 md:h-72 lg:h-96 border-2 border-gray-200 w-full">
-              <video
-                autoPlay
-                muted
-                loop
-                playsInline
+              <img
+                src={authGif}
+                alt="JournIQ Demo"
                 className="w-full h-full object-cover"
-                src="/src/assets/claude_login.mp4"
-              >
-                Your browser does not support the video tag.
-              </video>
+              />
             </div>
 
             
