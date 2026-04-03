@@ -10,7 +10,6 @@ const useNotes = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fetch notes from backend
   const fetchNotes = async () => {
     if (!token) return;
     setLoading(true);
@@ -26,10 +25,8 @@ const useNotes = () => {
 
   useEffect(() => {
     fetchNotes();
-    // eslint-disable-next-line
   }, [token]);
 
-  // Save note to backend
   const saveNote = async () => {
     if (!noteText.trim() || !token) return;
     setLoading(true);
@@ -44,7 +41,6 @@ const useNotes = () => {
     setLoading(false);
   };
 
-  // Delete note from backend
   const deleteNote = async (id) => {
     if (!token) return;
     setLoading(true);

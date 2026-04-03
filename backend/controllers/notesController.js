@@ -1,57 +1,59 @@
-import { validationResult } from 'express-validator'
-import Note from '../models/Note.js'
+import { validationResult } from 'express-validator';
+import { prisma } from '../lib/prisma.js';
+import { deleteCacheKeys } from '../lib/cache.js';
 
-// @desc    Get all notes for logged in user
-// @route   GET /api/notes
-// @access  Private
+const noteCacheKeys = (userId) => [
+  `timeline:${userId}`,
+];
+
 export const getNotes = async (req, res) => {
   try {
-    const { page = 1, limit = 10, category, priority, search } = req.query
-    
-    if (!req.user || !req.user._id) {
-      return res.status(401).json({
-        success: false,
-        msg: 'User not authenticated'
-      });
+    const { page = 1, limit = 10, search } = req.query;
+
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ success: false, msg: 'User not authenticated' });
     }
 
-    // Build query for user's own notes and notes shared with them
-    const query = {
-      $or: [
-        { owner: req.user._id },
-        { sharedWith: req.user._id }
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = parseInt(limit);
+
+    const whereClause = {
+      OR: [
+        { userId: req.user.id },
+        { sharedWith: { some: { id: req.user.id } } }
       ]
     };
 
-    if (category && category !== 'all') {
-      query.category = category;
-    }
-    if (priority && priority !== 'all') {
-      query.priority = priority;
-    }
     if (search) {
-      query.$and = [{
-        $or: [
-          { text: { $regex: search, $options: 'i' } }
-        ]
-      }];
+      whereClause.AND = [
+        {
+          OR: [
+            { title: { contains: search, mode: 'insensitive' } },
+            { content: { contains: search, mode: 'insensitive' } }
+          ]
+        }
+      ];
     }
 
-    // Execute query with pagination
-    const notes = await Note.find(query)
-      .sort({ createdAt: -1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
-      .populate('owner', 'name email _id')
-      .populate('sharedWith', 'name email _id');
+    const [notes, total] = await Promise.all([
+      prisma.note.findMany({
+        where: whereClause,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take,
+        include: {
+          user: { select: { id: true, name: true, email: true } },
+          sharedWith: { select: { id: true, name: true, email: true } }
+        }
+      }),
+      prisma.note.count({ where: whereClause })
+    ]);
 
-    const total = await Note.countDocuments(query);
-
-    // Transform notes to include ownership info
     const transformedNotes = notes.map(note => ({
-      ...note.toObject(),
-      isOwner: note.owner._id.toString() === req.user._id.toString(),
-      sharedWithMe: note.sharedWith.some(user => user._id.toString() === req.user._id.toString())
+      ...note,
+      text: note.content || note.title || '',
+      isOwner: note.userId === req.user.id,
+      sharedWithMe: note.sharedWith.some(u => u.id === req.user.id)
     }));
 
     res.json({
@@ -59,243 +61,136 @@ export const getNotes = async (req, res) => {
       data: transformedNotes,
       pagination: {
         total,
-        pages: Math.ceil(total / limit),
+        pages: Math.ceil(total / take),
         page: parseInt(page),
-        limit: parseInt(limit)
+        limit: take
       }
-    })
+    });
   } catch (error) {
-    console.error('Get notes error:', error.message)
-    res.status(500).json({
-      success: false,
-      msg: 'Server error while fetching notes'
-    })
+    console.error('Get notes error:', error.message);
+    res.status(500).json({ success: false, msg: 'Server error while fetching notes' });
   }
-}
-
+};
 
 export const getNote = async (req, res) => {
   try {
-    const note = await Note.findOne({
-      _id: req.params.id,
-      owner: req.user.id
-    }).populate('owner', 'name email')
+    const note = await prisma.note.findFirst({
+      where: {
+        id: req.params.id,
+        OR: [
+          { userId: req.user.id },
+          { sharedWith: { some: { id: req.user.id } } }
+        ]
+      },
+      include: {
+        user: { select: { id: true, name: true, email: true } }
+      }
+    });
 
-    if (!note) {
-      return res.status(404).json({
-        success: false,
-        msg: 'Note not found'
-      })
-    }
+    if (!note) return res.status(404).json({ success: false, msg: 'Note not found' });
 
-    res.json({
-      success: true,
-      data: note
-    })
+    res.json({ success: true, data: { ...note, text: note.content || note.title || '' } });
   } catch (error) {
-    console.error('Get note error:', error.message)
-    
-    if (error.name === 'CastError') {
-      return res.status(404).json({
-        success: false,
-        msg: 'Note not found'
-      })
-    }
-    
-    res.status(500).json({
-      success: false,
-      msg: 'Server error while fetching note'
-    })
+    console.error('Get note error:', error.message);
+    res.status(500).json({ success: false, msg: 'Server error while fetching note' });
   }
-}
-
+};
 
 export const createNote = async (req, res) => {
   try {
-    if (!req.user || !req.user._id) {
-      return res.status(401).json({
-        success: false,
-        msg: 'User not authenticated'
-      });
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ success: false, msg: 'User not authenticated' });
     }
 
-    const errors = validationResult(req)
+    const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        msg: 'Validation failed',
-        errors: errors.array()
-      })
+      return res.status(400).json({ success: false, msg: 'Validation failed', errors: errors.array() });
     }
 
-    const { title, content, category, priority, tags, reminderDate } = req.body
+    const { title, content, text, captions, videoUrl, videoTitle, color, tags } = req.body;
+    const normalizedContent = content ?? text ?? null;
+    const normalizedTitle = title || (normalizedContent ? String(normalizedContent).slice(0, 80) : 'Untitled note');
 
-    const note = new Note({
-      text: content.trim(),
-      owner: req.user._id,
-      title: title?.trim(),
-      category,
-      priority,
-      tags: tags?.map(tag => tag.trim()).filter(Boolean),
-      reminderDate,
-      sharedWith: [] // Initialize empty shared users array
-    })
-    
-    await note.save()
-    await note.populate('owner', 'name email _id')
-    
-    const noteWithOwnership = {
-      ...note.toObject(),
-      isOwner: true,
-      sharedWithMe: false
-    };
+    const note = await prisma.note.create({
+      data: {
+        title: normalizedTitle,
+        content: normalizedContent,
+        captions: captions ?? null,
+        videoUrl: videoUrl || null,
+        videoTitle: videoTitle || null,
+        color: color || '#ffffff',
+        tags: tags ? tags.map(t => t.trim()).filter(Boolean) : [],
+        userId: req.user.id
+      },
+      include: {
+        user: { select: { id: true, name: true, email: true } }
+      }
+    });
 
+    await deleteCacheKeys(noteCacheKeys(req.user.id));
     res.status(201).json({
       success: true,
       msg: 'Note created successfully',
-      data: noteWithOwnership
-    })
+      data: { ...note, text: note.content || note.title || '', isOwner: true, sharedWithMe: false }
+    });
   } catch (error) {
-    console.error('Create note error:', error.message)
-    res.status(500).json({
-      success: false,
-      msg: 'Server error while creating note'
-    })
+    console.error('Create note error:', error.message);
+    res.status(500).json({ success: false, msg: 'Server error while creating note' });
   }
-}
-
+};
 
 export const updateNote = async (req, res) => {
   try {
-    const errors = validationResult(req)
+    const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        msg: 'Validation failed',
-        errors: errors.array()
-      })
+      return res.status(400).json({ success: false, msg: 'Validation failed', errors: errors.array() });
     }
 
-    const { title, content, category, priority, tags, reminderDate } = req.body
+    const { title, content, text, captions, videoUrl, videoTitle, color, tags } = req.body;
+    const normalizedContent = content ?? text;
 
-    let note = await Note.findOne({
-      _id: req.params.id,
-      owner: req.user.id
-    })
+    const existingNote = await prisma.note.findFirst({
+      where: { id: req.params.id, userId: req.user.id }
+    });
 
-    if (!note) {
-      return res.status(404).json({
-        success: false,
-        msg: 'Note not found'
-      })
-    }
+    if (!existingNote) return res.status(404).json({ success: false, msg: 'Note not found or unauthorized' });
 
-    // Update fields
-    if (title !== undefined) note.title = title.trim()
-    if (content !== undefined) note.content = content.trim()
-    if (category !== undefined) note.category = category
-    if (priority !== undefined) note.priority = priority
-    if (tags !== undefined) note.tags = tags.map(tag => tag.trim()).filter(tag => tag)
-    if (reminderDate !== undefined) note.reminderDate = reminderDate
+    const note = await prisma.note.update({
+      where: { id: req.params.id },
+      data: {
+        ...(title !== undefined && { title }),
+        ...(normalizedContent !== undefined && { content: normalizedContent }),
+        ...(captions !== undefined && { captions }),
+        ...(videoUrl !== undefined && { videoUrl }),
+        ...(videoTitle !== undefined && { videoTitle }),
+        ...(color !== undefined && { color }),
+        ...(tags !== undefined && { tags: tags.map(t => t.trim()).filter(Boolean) })
+      },
+      include: { user: { select: { id: true, name: true, email: true } } }
+    });
 
-    await note.save()
-    await note.populate('user', 'name email')
-
-    res.json({
-      success: true,
-      msg: 'Note updated successfully',
-      data: note
-    })
+    await deleteCacheKeys(noteCacheKeys(req.user.id));
+    res.json({ success: true, msg: 'Note updated successfully', data: { ...note, text: note.content || note.title || '' } });
   } catch (error) {
-    console.error('Update note error:', error.message)
-    
-    if (error.name === 'CastError') {
-      return res.status(404).json({
-        success: false,
-        msg: 'Note not found'
-      })
-    }
-    
-    res.status(500).json({
-      success: false,
-      msg: 'Server error while updating note'
-    })
+    console.error('Update note error:', error.message);
+    res.status(500).json({ success: false, msg: 'Server error while updating note' });
   }
-}
+};
 
 export const deleteNote = async (req, res) => {
   try {
-    const note = await Note.findOne({
-      _id: req.params.id,
-      owner: req.user.id
-    })
+    const note = await prisma.note.findFirst({
+      where: { id: req.params.id, userId: req.user.id }
+    });
 
-    if (!note) {
-      return res.status(404).json({
-        success: false,
-        msg: 'Note not found'
-      })
-    }
+    if (!note) return res.status(404).json({ success: false, msg: 'Note not found or unauthorized' });
 
-    await Note.findByIdAndDelete(req.params.id)
+    await prisma.note.delete({ where: { id: req.params.id } });
+    await deleteCacheKeys(noteCacheKeys(req.user.id));
 
-    res.json({
-      success: true,
-      msg: 'Note deleted successfully'
-    })
+    res.json({ success: true, msg: 'Note deleted successfully' });
   } catch (error) {
-    console.error('Delete note error:', error.message)
-    
-    if (error.name === 'CastError') {
-      return res.status(404).json({
-        success: false,
-        msg: 'Note not found'
-      })
-    }
-    
-    res.status(500).json({
-      success: false,
-      msg: 'Server error while deleting note'
-    })
+    console.error('Delete note error:', error.message);
+    res.status(500).json({ success: false, msg: 'Server error while deleting note' });
   }
-}
-
-
-export const toggleArchiveNote = async (req, res) => {
-  try {
-    const note = await Note.findOne({
-      _id: req.params.id,
-      owner: req.user.id
-    })
-
-    if (!note) {
-      return res.status(404).json({
-        success: false,
-        msg: 'Note not found'
-      })
-    }
-
-    note.isArchived = !note.isArchived
-    await note.save()
-
-    res.json({
-      success: true,
-      msg: `Note ${note.isArchived ? 'archived' : 'unarchived'} successfully`,
-      data: note
-    })
-  } catch (error) {
-    console.error('Archive note error:', error.message)
-    
-    if (error.name === 'CastError') {
-      return res.status(404).json({
-        success: false,
-        msg: 'Note not found'
-      })
-    }
-    
-    res.status(500).json({
-      success: false,
-      msg: 'Server error while archiving note'
-    })
-  }
-}
+};

@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  username  String?  @unique
+  password  String?
+  uniqueId  String   @unique @default(uuid())
+  online    Boolean  @default(false)
+  lastLogin DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  notes                 Note[]          @relation("UserNotes")
+  sharedNotes           Note[]          @relation("SharedNotes")
+  sentMessages          Message[]       @relation("SentMessages")
+  receivedMessages      Message[]       @relation("ReceivedMessages")
+  conversations         Conversation[]  @relation("ConversationParticipants")
+  sentFriendRequests    FriendRequest[] @relation("SentFriendRequests")
+  receivedFriendRequests FriendRequest[] @relation("ReceivedFriendRequests")
+  notifications         Notification[]
+  authAccounts          AuthAccount[]
+  sessions              Session[]
+}
+
+model AuthAccount {
+  id                String   @id @default(uuid())
+  userId            String
+  provider          String
+  providerAccountId String
+  accessToken       String?
+  refreshToken      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  refreshToken String   @unique
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Note {
+  id         String   @id @default(uuid())
+  title      String
+  content    String?
+  captions   String?
+  videoUrl   String?
+  videoTitle String?
+  color      String   @default("#ffffff")
+  tags       String[]
+  
+  userId     String
+  user       User     @relation("UserNotes", fields: [userId], references: [id])
+
+  sharedWith User[]   @relation("SharedNotes")
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Message {
+  id             String   @id @default(uuid())
+  content        String
+  
+  senderId       String
+  sender         User     @relation("SentMessages", fields: [senderId], references: [id])
+  
+  receiverId     String
+  receiver       User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  
+  conversationId String?
+  conversation   Conversation? @relation(fields: [conversationId], references: [id])
+  
+  read           Boolean  @default(false)
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Conversation {
+  id           String    @id @default(uuid())
+  
+  participants User[]    @relation("ConversationParticipants")
+  messages     Message[]
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model FriendRequest {
+  id         String   @id @default(uuid())
+  
+  senderId   String
+  sender     User     @relation("SentFriendRequests", fields: [senderId], references: [id])
+  
+  receiverId String
+  receiver   User     @relation("ReceivedFriendRequests", fields: [receiverId], references: [id])
+  
+  status     String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([senderId, receiverId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  type      String
+  read      Boolean  @default(false)
+  data      Json?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

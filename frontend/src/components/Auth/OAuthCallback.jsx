@@ -1,35 +1,30 @@
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import useAuth from '../../hooks/useAuth';
 
 const OAuthCallback = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { completeOAuth } = useAuth();
 
   useEffect(() => {
-    const handleOAuthCallback = () => {
+    const handleOAuthCallback = async () => {
       const urlParams = new URLSearchParams(location.search);
       const token = urlParams.get('token');
       const error = urlParams.get('error');
 
       if (error) {
         console.error('Authentication failed:', error);
-        navigate('/login');
+        navigate('/login', { replace: true });
         return;
       }
 
-      if (token) {
-        // Store the token and user data
-        localStorage.setItem('token', token);
-        // Redirect to dashboard
-        navigate('/dashboard');
-      } else {
-        // If no token is present, redirect to login
-        navigate('/login');
-      }
+      const success = await completeOAuth(token);
+      navigate(success ? '/dashboard' : '/login', { replace: true });
     };
 
     handleOAuthCallback();
-  }, [navigate, location]);
+  }, [completeOAuth, location.search, navigate]);
 
   return (
     <div className="flex items-center justify-center min-h-screen">

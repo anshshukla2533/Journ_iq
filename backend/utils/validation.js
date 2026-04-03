@@ -1,6 +1,5 @@
 import { body, validationResult } from 'express-validator'
 
-// Password strength validation
 export const validatePasswordStrength = (password) => {
   const minLength = 6
   const hasUpperCase = /[A-Z]/.test(password)
@@ -20,29 +19,25 @@ export const validatePasswordStrength = (password) => {
   }
 }
 
-// Email validation
 export const validateEmail = (email) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   return emailRegex.test(email)
 }
 
-// Sanitize user input
 export const sanitizeInput = (input) => {
   if (typeof input !== 'string') return input
   
   return input
     .trim()
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
-    .replace(/javascript:/gi, '') // Remove javascript: protocol
-    .replace(/on\w+\s*=/gi, '') // Remove event handlers
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/javascript:/gi, '')
+    .replace(/on\w+\s*=/gi, '')
 }
 
-// Validate ObjectId format
 export const isValidObjectId = (id) => {
   return /^[0-9a-fA-F]{24}$/.test(id)
 }
 
-// Common validation middleware
 export const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req)
   

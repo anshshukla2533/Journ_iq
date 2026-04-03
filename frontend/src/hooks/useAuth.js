@@ -1,89 +1,75 @@
-import { useState, useEffect } from 'react'
-import authService from '../services/authService'
+import { createContext, createElement, useContext, useEffect, useMemo, useState } from 'react';
+import authService from '../services/authService';
+import { setAuthToken } from '../services/api';
 
+const AuthContext = createContext(null);
 
-const useAuth = () => {
+function getStoredJson(key) {
+  const raw = localStorage.getItem(key);
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw);
+  } catch {
+    localStorage.removeItem(key);
+    return null;
+  }
+}
+
+export function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
+  const [user, setUser] = useState(() => getStoredJson('user'));
+  const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [authMode, setAuthMode] = useState('login');
-  const [loginForm, setLoginForm] = useState({ email: '', password: '' });
-  const [registerForm, setRegisterForm] = useState({ name: '', email: '', password: '' });
+  const [loginForm, setLoginForm] = useState({ identifier: '', password: '' });
+  const [registerForm, setRegisterForm] = useState({
+    name: '',
+    username: '',
+    email: '',
+    password: '',
+  });
 
-  // Initialize from localStorage synchronously
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    const storedToken = localStorage.getItem('token');
-    
-    if (storedToken) {
-      setToken(storedToken);
-      if (storedUser) {
-        try {
-          setUser(JSON.parse(storedUser));
-        } catch (e) {
-          setUser(null);
-        }
-      }
+  const persistSession = (nextToken, nextUser) => {
+    setToken(nextToken);
+    setUser(nextUser);
+    setAuthToken(nextToken);
+
+    if (nextToken && nextUser) {
+      localStorage.setItem('token', nextToken);
+      localStorage.setItem('user', JSON.stringify(nextUser));
+      return;
     }
-    
-    // Then verify with the backend
-    const verifyAuth = async () => {
-      if (storedToken) {
-        try {
-          const response = await authService.getCurrentUser(storedToken);
-          if (response.success && response.data) {
-            setUser({ 
-              _id: response.data._id || response.data.id,
-              id: response.data._id || response.data.id,
-              name: response.data.name,
-              email: response.data.email
-            });
-          } else {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            setToken(null);
-            setUser(null);
-          }
-        } catch (e) {
-          console.error('Failed to verify auth session:', e);
-        }
-      }
-      setIsLoading(false);
-    };
 
-    verifyAuth();
-  }, []);
-  
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  };
+
+  const clearSession = () => {
+    persistSession(null, null);
+    setLoginForm({ identifier: '', password: '' });
+    setRegisterForm({ name: '', username: '', email: '', password: '' });
+  };
+
   const checkAuthStatus = async () => {
+    const storedToken = localStorage.getItem('token');
+    if (!storedToken) {
+      setIsLoading(false);
+      return false;
+    }
+
     setIsLoading(true);
     try {
-      const storedToken = localStorage.getItem('token');
-      if (storedToken) {
-        const response = await authService.getCurrentUser(storedToken);
-        if (response.success && response.data) {
-          setUser({ 
-            _id: response.data._id || response.data.id,
-            id: response.data._id || response.data.id,
-            name: response.data.name,
-            email: response.data.email
-          });
-          setToken(storedToken);
-          return true;
-        } else {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          setToken(null);
-          setUser(null);
-          return false;
-        }
+      const response = await authService.getCurrentUser(storedToken);
+      if (response.success && response.data) {
+        persistSession(storedToken, response.data);
+        return true;
       }
+
+      clearSession();
       return false;
-    } catch (e) {
-      console.error('Failed to check auth session:', e);
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      setToken(null);
-      setUser(null);
+    } catch (error) {
+      console.error('Failed to check auth session:', error);
+      clearSession();
       return false;
     } finally {
       setIsLoading(false);
@@ -91,102 +77,93 @@ const useAuth = () => {
   };
 
   useEffect(() => {
-    if (user && token) {
-      localStorage.setItem('user', JSON.stringify(user));
-      localStorage.setItem('token', token);
-    } else {
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
-    }
-  }, [user, token]);
+    checkAuthStatus();
+  }, []);
 
   const login = async () => {
-    if (!loginForm.email || !loginForm.password) {
-      alert("Please fill in all fields")
-      return false
+    if (!loginForm.identifier || !loginForm.password) {
+      alert('Please fill in all fields');
+      return false;
     }
-    
-    try {
-      const response = await authService.login(loginForm)
-      if (response.success) {
-        const userData = {
-          _id: response.data.user?._id || response.data._id || response.data.id,
-          id: response.data.user?._id || response.data._id || response.data.id,
-          name: response.data.user?.name || response.data.name,
-          email: response.data.user?.email || response.data.email
-        };
-        setToken(response.data.token)
-        setUser(userData)
-        setLoginForm({ email: '', password: '' })
-        // Persist in localStorage
-        localStorage.setItem('user', JSON.stringify(userData));
-        localStorage.setItem('token', response.data.token);
-        return true
-      } else {
-        alert(response.message)
-        return false
-      }
-    } catch (error) {
-      alert("Login failed. Please try again.")
-      return false
+
+    const response = await authService.login(loginForm);
+    if (!response.success) {
+      alert(response.message);
+      return false;
     }
-  }
+
+    persistSession(response.data.token, response.data.user);
+    setLoginForm({ identifier: '', password: '' });
+    return true;
+  };
 
   const register = async () => {
-    if (!registerForm.name || !registerForm.email || !registerForm.password) {
-      alert("Please fill in all fields")
-      return
+    if (!registerForm.name || !registerForm.username || !registerForm.email || !registerForm.password) {
+      alert('Please fill in all fields');
+      return false;
     }
-    
-    try {
-      const response = await authService.register(registerForm)
-      // If validation failed on the backend, show detailed errors when available
-      if (!response.success) {
-        if (response.errors && response.errors.length > 0) {
-          const msgs = response.errors.map(e => e.msg || e.message || JSON.stringify(e)).join('\n')
-          alert(msgs)
-        } else {
-          alert(response.message || 'Registration failed')
-        }
-        return
-      }
 
-      // Success
-      alert(response.message)
-      if (response.success) {
-        setRegisterForm({ name: '', email: '', password: '' })
-        setAuthMode('login')
-      }
-    } catch (error) {
-      alert("Registration failed. Please try again.")
+    const response = await authService.register(registerForm);
+    if (!response.success) {
+      const validationErrors = response.errors?.map((item) => item.msg).filter(Boolean);
+      alert(validationErrors?.length ? validationErrors.join('\n') : response.message);
+      return false;
     }
-  }
+
+    persistSession(response.data.token, response.data.user);
+    setRegisterForm({ name: '', username: '', email: '', password: '' });
+    return true;
+  };
+
+  const completeOAuth = async (oauthToken) => {
+    if (!oauthToken) {
+      clearSession();
+      return false;
+    }
+
+    const response = await authService.getCurrentUser(oauthToken);
+    if (!response.success || !response.data) {
+      clearSession();
+      return false;
+    }
+
+    persistSession(oauthToken, response.data);
+    return true;
+  };
 
   const logout = () => {
-    setToken(null)
-    setUser(null)
-    setLoginForm({ email: '', password: '' })
-    setRegisterForm({ name: '', email: '', password: '' })
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    alert("Logout successful")
-  }
+    clearSession();
+  };
 
-  return {
-    user,
-    token,
-    authMode,
-    setAuthMode,
-    loginForm,
-    setLoginForm,
-    registerForm,
-    setRegisterForm,
-    login,
-    register,
-    logout,
-    isLoading,
-    checkAuthStatus
-  }
+  const value = useMemo(
+    () => ({
+      user,
+      token,
+      authMode,
+      setAuthMode,
+      loginForm,
+      setLoginForm,
+      registerForm,
+      setRegisterForm,
+      login,
+      register,
+      logout,
+      isLoading,
+      checkAuthStatus,
+      completeOAuth,
+    }),
+    [user, token, authMode, loginForm, registerForm, isLoading]
+  );
+
+  return createElement(AuthContext.Provider, { value }, children);
 }
 
-export default useAuth
+export default function useAuth() {
+  const context = useContext(AuthContext);
+
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+
+  return context;
+}

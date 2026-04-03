@@ -1,126 +1,164 @@
-import User from '../models/User.js';
-import Friendship from '../models/Friendship.js';
+import { prisma } from '../lib/prisma.js';
+import { hasUserUsernameField } from '../lib/prismaCapabilities.js';
 
 const normalizeEmail = (e) => String(e || '').trim().toLowerCase();
 
 export async function searchUsers(req, res) {
   try {
-    const q = String(req.query.q || req.query.query || '').trim();
+    const q = String(req.query.q || '').trim();
     if (!q) return res.json({ users: [] });
-    const emailQuery = q.includes('@') ? normalizeEmail(q) : null;
-    const or = emailQuery
-      ? [{ email: emailQuery }]
-      : [
-          { name: { $regex: q, $options: 'i' } },
-          { email: { $regex: q, $options: 'i' } }
-        ];
-    const users = await User.find({ $or: or }).select('_id name email online');
-    res.json({ users });
+
+    const currentUserId = req.user?.id || null;
+    const orFilters = [
+      { email: { contains: q, mode: 'insensitive' } },
+      { name: { contains: q, mode: 'insensitive' } },
+    ];
+
+    if (hasUserUsernameField()) {
+      orFilters.push({ username: { contains: q, mode: 'insensitive' } });
+    }
+
+    const users = await prisma.user.findMany({
+      where: {
+        AND: [
+          { OR: orFilters },
+          ...(currentUserId ? [{ id: { not: currentUserId } }] : []),
+        ],
+      },
+      select: { id: true, name: true, email: true, online: true, lastLogin: true, ...(hasUserUsernameField() ? { username: true } : {}) },
+      take: 20
+    });
+    const mapped = users.map(u => ({ ...u, _id: u.id }));
+    res.json({ users: mapped });
   } catch (e) {
+    console.error('Friend search failed:', e);
     res.status(500).json({ message: 'Search failed' });
+  }
+}
+
+export async function sendRequest(req, res) {
+  try {
+    const senderEmail = normalizeEmail(req.user.email);
+    const receiverEmail = normalizeEmail(req.body.receiverEmail);
+    if (!receiverEmail) return res.status(400).json({ message: 'receiverEmail required' });
+    if (senderEmail === receiverEmail) return res.status(400).json({ message: 'Cannot add yourself' });
+
+    const receiver = await prisma.user.findUnique({ where: { email: receiverEmail } });
+    if (!receiver) return res.status(404).json({ message: 'User not found' });
+    
+    const senderId = req.user.id;
+    const receiverId = receiver.id;
+
+    const existing = await prisma.friendRequest.findFirst({
+      where: {
+        OR: [
+          { senderId, receiverId },
+          { senderId: receiverId, receiverId: senderId }
+        ]
+      }
+    });
+
+    if (existing) {
+      if (existing.status === 'ACCEPTED') return res.status(200).json({ message: 'Already friends' });
+      return res.status(200).json({ message: 'Request already exists' });
+    }
+
+    await prisma.friendRequest.create({
+      data: { senderId, receiverId, status: 'PENDING' }
+    });
+    res.status(201).json({ message: 'Request sent' });
+  } catch (e) {
+    console.error('Failed to send friend request:', e);
+    res.status(500).json({ message: 'Failed to send request' });
+  }
+}
+
+export async function listRequests(req, res) {
+  try {
+    const incoming = await prisma.friendRequest.findMany({
+      where: { receiverId: req.user.id, status: 'PENDING' },
+      include: {
+        sender: { select: { email: true, name: true, id: true } }
+      }
+    });
+    const mapped = incoming.map(r => ({ ...r, _id: r.id, senderEmail: r.sender.email }));
+    res.json(mapped);
+  } catch (e) {
+    res.status(500).json({ message: 'Failed to list requests' });
+  }
+}
+
+export async function acceptRequest(req, res) {
+  try {
+    const { requestId } = req.body;
+    const fr = await prisma.friendRequest.findUnique({ where: { id: requestId } });
+    if (!fr || fr.status !== 'PENDING') return res.status(404).json({ message: 'Request not found' });
+    if (fr.receiverId !== req.user.id) return res.status(403).json({ message: 'Not allowed' });
+
+    await prisma.friendRequest.update({
+      where: { id: requestId },
+      data: { status: 'ACCEPTED' }
+    });
+    res.json({ message: 'Accepted' });
+  } catch (e) {
+    res.status(500).json({ message: 'Failed to accept' });
+  }
+}
+
+export async function declineRequest(req, res) {
+  try {
+    const { requestId } = req.body;
+    const fr = await prisma.friendRequest.findUnique({ where: { id: requestId } });
+    if (!fr || fr.status !== 'PENDING') return res.status(404).json({ message: 'Request not found' });
+    if (fr.receiverId !== req.user.id) return res.status(403).json({ message: 'Not allowed' });
+
+    await prisma.friendRequest.update({
+      where: { id: requestId },
+      data: { status: 'REJECTED' } 
+    });
+    res.json({ message: 'Declined' });
+  } catch (e) {
+    res.status(500).json({ message: 'Failed to decline' });
   }
 }
 
 export async function listFriends(req, res) {
   try {
-    const myId = req.user._id;
-    const friendships = await Friendship.find({
-      $or: [{ requester: myId, status: 'accepted' }, { recipient: myId, status: 'accepted' }]
-    }).populate('requester recipient', 'name email online');
-
-    const friends = friendships.map(f => {
-      const friend = f.requester._id.toString() === myId.toString() ? f.recipient : f.requester;
-      return { _id: friend._id, name: friend.name, email: friend.email, online: friend.online, conversationId: f.conversationId };
+    const myId = req.user.id;
+    const friendsReqs = await prisma.friendRequest.findMany({
+      where: {
+        status: 'ACCEPTED',
+        OR: [{ senderId: myId }, { receiverId: myId }]
+      },
+      include: {
+        sender: { select: { id: true, name: true, email: true, online: true, lastLogin: true } },
+        receiver: { select: { id: true, name: true, email: true, online: true, lastLogin: true } }
+      }
     });
+    
+    const friends = friendsReqs
+      .map(fr => {
+        const isSender = fr.senderId === myId;
+        const f = isSender ? fr.receiver : fr.sender;
+        return { ...f, _id: f.id };
+      })
+      .filter(friend => friend.id !== myId);
     res.json(friends);
   } catch (e) {
     res.status(500).json({ message: 'Failed to list friends' });
   }
 }
 
-export async function listRequests(req, res) {
+export async function friendProfileByEmail(req, res) {
   try {
-    const myId = req.user._id;
-    const incoming = await Friendship.find({ recipient: myId, status: 'pending' }).populate('requester', 'name email');
-    res.json(incoming.map(r => ({ _id: r._id, requesterId: r.requester._id, requesterName: r.requester.name, requesterEmail: r.requester.email, createdAt: r.createdAt })));
+    const email = normalizeEmail(req.params.email);
+    const user = await prisma.user.findUnique({ 
+      where: { email },
+      select: { id: true, name: true, email: true, online: true, lastLogin: true, createdAt: true, sharedNotes: true }
+    });
+    if (!user) return res.status(404).json({ message: 'Not found' });
+    res.json({ ...user, _id: user.id });
   } catch (e) {
-    res.status(500).json({ message: 'Failed to list requests' });
+    res.status(500).json({ message: 'Failed to fetch profile' });
   }
 }
-
-export async function sendRequest(req, res) {
-  try {
-    const myId = req.user._id;
-    const { receiverId } = req.body;
-    if (!receiverId) return res.status(400).json({ message: 'receiverId required' });
-    if (String(receiverId) === String(myId)) return res.status(400).json({ message: 'Cannot add yourself' });
-
-    // Ensure user exists
-    const other = await User.findById(receiverId).select('_id email');
-    if (!other) return res.status(404).json({ message: 'User not found' });
-
-    // Upsert a pending friendship (prevent duplicates)
-    const doc = await Friendship.findOneAndUpdate(
-      { $or: [{ requester: myId, recipient: receiverId }, { requester: receiverId, recipient: myId }] },
-      { $setOnInsert: { requester: myId, recipient: receiverId, status: 'pending' } },
-      { upsert: true, new: true }
-    );
-
-    res.status(201).json({ message: 'Request sent', request: { _id: doc._id } });
-  } catch (e) {
-    res.status(500).json({ message: 'Failed to send request', error: e.message });
-  }
-}
-
-export async function acceptRequest(req, res) {
-  try {
-    const myId = req.user._id;
-    const { requestId } = req.body;
-    const reqDoc = await Friendship.findById(requestId);
-    if (!reqDoc || String(reqDoc.recipient) !== String(myId)) return res.status(404).json({ message: 'Request not found or not allowed' });
-    reqDoc.status = 'accepted';
-    // compute conversationId from emails for messaging
-    const me = await User.findById(myId).select('email');
-    const other = await User.findById(reqDoc.requester).select('email');
-    if (me && other) reqDoc.conversationId = [String(me.email).toLowerCase(), String(other.email).toLowerCase()].sort().join(':');
-    await reqDoc.save();
-    res.json({ message: 'Accepted' });
-  } catch (e) {
-    res.status(500).json({ message: 'Failed to accept', error: e.message });
-  }
-}
-
-export async function declineRequest(req, res) {
-  try {
-    const myId = req.user._id;
-    const { requestId } = req.body;
-    const reqDoc = await Friendship.findById(requestId);
-    if (!reqDoc || String(reqDoc.recipient) !== String(myId)) return res.status(404).json({ message: 'Request not found or not allowed' });
-    reqDoc.status = 'declined';
-    await reqDoc.save();
-    res.json({ message: 'Declined' });
-  } catch (e) {
-    res.status(500).json({ message: 'Failed to decline', error: e.message });
-  }
-}
-
-export async function removeFriend(req, res) {
-  try {
-    const myId = req.user._id;
-    const { friendId } = req.body;
-    await Friendship.findOneAndDelete({ $or: [{ requester: myId, recipient: friendId }, { requester: friendId, recipient: myId }] });
-    res.json({ message: 'Removed' });
-  } catch (e) {
-    res.status(500).json({ message: 'Failed to remove friend', error: e.message });
-  }
-}
-
-export default {
-  searchUsers,
-  listFriends,
-  listRequests,
-  sendRequest,
-  acceptRequest,
-  declineRequest,
-  removeFriend
-};

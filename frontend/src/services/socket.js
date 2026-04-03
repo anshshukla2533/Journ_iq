@@ -1,24 +1,21 @@
 import { io } from 'socket.io-client';
+import { API_ORIGIN } from './api';
 
-// Singleton socket instance + optional notification handler.
 let socket = null;
 let notificationHandler = null;
 
 function resolveSocketUrl() {
-  const env = import.meta.env.VITE_API_URL;
-  if (env && typeof env === 'string') {
-    const trimmed = env.endsWith('/') ? env.slice(0, -1) : env;
-    return trimmed.endsWith('/api') ? trimmed.slice(0, -4) : trimmed;
+  if (import.meta.env.VITE_SOCKET_URL) {
+    return import.meta.env.VITE_SOCKET_URL.replace(/\/$/, '');
   }
-  if (typeof window !== 'undefined' && window.location?.origin) return window.location.origin;
-  return null;
+
+  return API_ORIGIN || (typeof window !== 'undefined' ? window.location.origin : null);
 }
 
 export function createSocket(token) {
   const baseUrl = resolveSocketUrl();
   console.log('[socket.js] Creating socket:', { hasToken: !!token, existing: !!socket, existingId: socket?.id, baseUrl });
 
-  // Reuse socket when token unchanged
   if (socket && socket.auth && socket.auth.token === token) {
     if (!socket.connected) {
       try { socket.connect(); } catch (_) {}
@@ -55,7 +52,6 @@ export function createSocket(token) {
     console.log('[socket.js] Socket disconnected:', { reason, id: socket.id });
   });
 
-  // Central notification listener that delegates to the latest handler
   socket.on('notification', (payload) => {
     if (typeof notificationHandler === 'function') {
       try { notificationHandler(payload); } catch (err) { console.error('notificationHandler threw', err); }

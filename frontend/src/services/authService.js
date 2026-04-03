@@ -1,143 +1,89 @@
-import axios from 'axios';
+import { api, API_ORIGIN, setAuthToken } from './api';
 
-// Properly read VITE_API_URL from environment or fall back intelligently
-const getApiUrl = () => {
-  // In production (Vercel), VITE_API_URL should be set
-  if (import.meta.env.VITE_API_URL) {
-    let url = import.meta.env.VITE_API_URL;
-    // Ensure /api is at the end if not already there
-    if (!url.endsWith('/api')) {
-      url = url + '/api';
-    }
-    return url;
-  }
-  // In local dev, use localhost
-  if (import.meta.env.DEV) {
-    return 'http://localhost:3000/api';
-  }
-  // Fallback for production without env var
-  return '/api'; // This will use relative URL
-};
-
-const API_BASE_URL = getApiUrl();
-
-console.log('API_BASE_URL:', API_BASE_URL, 'ENV:', import.meta.env.VITE_API_URL);
-
-// Create axios instance with default config
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+function normalizeError(error, fallbackMessage) {
+  return {
+    success: false,
+    message: error.response?.data?.msg || fallbackMessage,
+    data: null,
+    errors: error.response?.data?.errors || [],
+  };
+}
 
 const authService = {
-  // Register new user
   async register(userData) {
     try {
-      console.log('[AUTH_DEBUG] Register - userData being sent:', userData);
-      console.log('[AUTH_DEBUG] Register - API URL:', API_BASE_URL);
       const response = await api.post('/auth/register', userData);
-      console.log('[AUTH_DEBUG] Register - Success response:', response.data);
+      if (response.data.token) {
+        setAuthToken(response.data.token);
+      }
+
       return {
         success: true,
         message: response.data.msg,
         data: response.data,
-        errors: []
+        errors: [],
       };
     } catch (error) {
-      console.error('[AUTH_DEBUG] Register - Error:', {
-        status: error.response?.status,
-        message: error.response?.data?.msg,
-        errors: error.response?.data?.errors,
-        fullError: error
-      });
-      return {
-        success: false,
-        message: error.response?.data?.msg || 'Network error. Please check your connection.',
-        data: null,
-        errors: error.response?.data?.errors || []
-      };
+      return normalizeError(error, 'Registration failed. Please try again.');
     }
   },
 
-  // Login user
   async login(credentials) {
     try {
-      console.log('[AUTH_DEBUG] Login - credentials being sent:', { email: credentials.email, password: '***' });
-      console.log('[AUTH_DEBUG] Login - API URL:', API_BASE_URL);
       const response = await api.post('/auth/login', credentials);
-      console.log('[AUTH_DEBUG] Login - Success response:', response.data);
-      // Set the token in axios defaults for future requests
       if (response.data.token) {
-        api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+        setAuthToken(response.data.token);
       }
+
       return {
         success: true,
         message: response.data.msg,
         data: response.data,
-        errors: []
+        errors: [],
       };
     } catch (error) {
-      console.error('[AUTH_DEBUG] Login - Error:', {
-        status: error.response?.status,
-        message: error.response?.data?.msg,
-        errors: error.response?.data?.errors,
-        fullError: error
-      });
-      return {
-        success: false,
-        message: error.response?.data?.msg || 'Network error. Please check your connection.',
-        data: null,
-        errors: error.response?.data?.errors || []
-      };
+      return normalizeError(error, 'Login failed. Please check your connection.');
     }
   },
 
-  // Get current user
   async getCurrentUser(token) {
     try {
       if (token) {
-        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        setAuthToken(token);
       }
-      const response = await api.get('/auth/user');
+
+      const response = await api.get('/auth/me');
       return {
         success: true,
         message: response.data.msg,
-        data: response.data.user
+        data: response.data.user,
       };
     } catch (error) {
-      return {
-        success: false,
-        message: error.response?.data?.msg || 'Failed to fetch user data',
-        data: null
-      };
+      return normalizeError(error, 'Failed to fetch user data');
     }
   },
 
-  // Update user profile
   async updateProfile(profileData, token) {
     try {
       if (token) {
-        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        setAuthToken(token);
       }
+
       const response = await api.put('/auth/profile', profileData);
       return {
         success: true,
         message: response.data.msg,
         data: response.data.user,
-        errors: []
+        errors: [],
       };
     } catch (error) {
-      return {
-        success: false,
-        message: error.response?.data?.msg || 'Network error. Please try again.',
-        data: null,
-        errors: error.response?.data?.errors || []
-      };
+      return normalizeError(error, 'Profile update failed. Please try again.');
     }
-  }
-}
+  },
 
-export default authService
+  getGoogleAuthUrl() {
+    return `${API_ORIGIN}/api/auth/google`;
+  },
+};
+
+export default authService;

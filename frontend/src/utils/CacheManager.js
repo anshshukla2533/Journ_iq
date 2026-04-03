@@ -1,5 +1,5 @@
 class CacheManager {
-  constructor(ttl = 300000) { // Default TTL: 5 minutes
+  constructor(ttl = 300000) {
     this.cache = new Map();
     this.ttl = ttl;
   }

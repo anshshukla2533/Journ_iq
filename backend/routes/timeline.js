@@ -1,21 +1,30 @@
 import express from 'express';
-import Note from '../models/Note.js';
+import { prisma } from '../lib/prisma.js';
 import protect from '../middleware/protectRoute.js';
+import { getCachedJson, setCachedJson } from '../lib/cache.js';
 
 const router = express.Router();
 
-// GET /api/timeline - Get notes grouped by date (timeline view) - PRIVATE
 router.get('/', protect, async (req, res) => {
   try {
-    // Only return notes owned by the authenticated user
-    const notes = await Note.find({ owner: req.user._id, isArchived: false }).sort({ createdAt: -1 });
-    // Group notes by date (YYYY-MM-DD)
+    const cacheKey = `timeline:${req.user.id}`;
+    const cached = await getCachedJson(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
+    const notes = await prisma.note.findMany({ 
+      where: { userId: req.user.id },
+      orderBy: { createdAt: 'desc' }
+    });
+    
     const timeline = {};
     notes.forEach(note => {
       const date = note.createdAt.toISOString().slice(0, 10);
       if (!timeline[date]) timeline[date] = [];
-      timeline[date].push(note);
+      timeline[date].push({ ...note, _id: note.id });
     });
+    await setCachedJson(cacheKey, timeline, 300);
     res.json(timeline);
   } catch (error) {
     console.error('Timeline API error:', error.message);

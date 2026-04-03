@@ -1,21 +1,8 @@
-/**
- * Utility functions for date/time operations and common helpers
- */
-
-/**
- * Get a formatted timestamp string
- * @returns {string} Formatted timestamp
- */
 export const getTimeStamp = () => {
     const now = new Date();
     return now.toISOString();
 };
 
-/**
- * Format a date for display
- * @param {Date|string} date - Date to format
- * @returns {string} Formatted date string
- */
 export const formatDate = (date) => {
     const d = new Date(date);
     return d.toLocaleDateString('en-US', {
@@ -27,11 +14,6 @@ export const formatDate = (date) => {
     });
 };
 
-/**
- * Get relative time string (e.g., "2 minutes ago", "1 hour ago")
- * @param {Date|string} date - Date to compare
- * @returns {string} Relative time string
- */
 export const getRelativeTime = (date) => {
     const now = new Date();
     const then = new Date(date);
@@ -55,41 +37,19 @@ export const getRelativeTime = (date) => {
     }
 };
 
-/**
- * Generate a conversation ID from two user IDs
- * @param {string} userId1 First user ID
- * @param {string} userId2 Second user ID
- * @returns {string} Sorted and concatenated user IDs
- */
 export const generateConversationId = (userId1, userId2) => {
     return [userId1, userId2].sort().join(':');
 };
 
-/**
- * Truncate a string to a specified length
- * @param {string} str String to truncate
- * @param {number} length Maximum length
- * @returns {string} Truncated string with ellipsis if needed
- */
 export const truncateString = (str, length = 50) => {
     if (!str) return '';
     return str.length > length ? str.substring(0, length) + '...' : str;
 };
 
-/**
- * Extract file extension from a filename or path
- * @param {string} filename Filename or path
- * @returns {string} File extension without dot
- */
 export const getFileExtension = (filename) => {
     return filename.slice((filename.lastIndexOf('.') - 1 >>> 0) + 2);
 };
 
-/**
- * Check if a string is a valid URL
- * @param {string} str String to check
- * @returns {boolean} True if string is a valid URL
- */
 export const isValidUrl = (str) => {
     try {
         new URL(str);
@@ -99,11 +59,6 @@ export const isValidUrl = (str) => {
     }
 };
 
-/**
- * Format file size to human readable string
- * @param {number} bytes File size in bytes
- * @returns {string} Formatted size string
- */
 export const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -112,11 +67,6 @@ export const formatFileSize = (bytes) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
-/**
- * Generate a random string of specified length
- * @param {number} length Length of string to generate
- * @returns {string} Random string
- */
 export const generateRandomString = (length = 10) => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
@@ -126,11 +76,6 @@ export const generateRandomString = (length = 10) => {
     return result;
 };
 
-/**
- * Check if a value is empty (null, undefined, empty string, or empty array)
- * @param {*} value Value to check
- * @returns {boolean} True if value is empty
- */
 export const isEmpty = (value) => {
     return (
         value === null ||
@@ -141,11 +86,6 @@ export const isEmpty = (value) => {
     );
 };
 
-/**
- * Deep clone an object
- * @param {*} obj Object to clone
- * @returns {*} Cloned object
- */
 export const deepClone = (obj) => {
     return JSON.parse(JSON.stringify(obj));
 };

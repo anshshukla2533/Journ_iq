@@ -1,57 +1,30 @@
 import express from 'express';
 import dotenv from "dotenv";
+import cors from 'cors';
+import helmet from 'helmet';
 
-import connectDB from "./config/database.js";
 dotenv.config();
 
-import cors from 'cors'
-import helmet from 'helmet'
-
-import passport from './config/passport.js'
-import session from 'express-session'
-import authRoutes from './routes/auth.js'
-import notesRoutes from './routes/notes.js'
-import youtubeRoutes from './routes/youtube.js'
-import timelineRoutes from './routes/timeline.js'
-dotenv.config()
-
+import authRoutes from './routes/auth.js';
+import notesRoutes from './routes/notes.js';
+import youtubeRoutes from './routes/youtube.js';
+import timelineRoutes from './routes/timeline.js';
 import messagesRoutes from './routes/messages.js';
 import notificationsRoutes from './routes/notifications.js';
 import noteShareRoutes from './routes/noteShare.js';
 import friendsRoutes from './routes/friends.js';
+import { initRedis } from './lib/redis.js';
+import passport from './config/passport.js';
+import aiRoutes from './routes/ai.js';
 
-const app = express()
-// Behind Render/Proxy so trust the first proxy for secure cookies & IPs
-app.set('trust proxy', 1)
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'supersecret',
-  resave: false,
-  saveUninitialized: false,
-  proxy: true,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-  },
-}));
-app.use(passport.initialize())
-app.use(passport.session())
-connectDB()
+const app = express();
+
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
-}))
-// Configure CORS to allow both Vercel and local dev origins
-const allowedOrigins = [
-  process.env.CLIENT_URL,
-  process.env.FRONTEND_URL,
-  process.env.VERCEL_FRONTEND_URL,
-  'http://localhost:5173',
-  'https://journ-iq-93xs.vercel.app'
-].filter(Boolean);
-
-console.log('Allowed CORS Origins:', allowedOrigins);
+}));
 
 const corsOptions = {
-  origin: allowedOrigins,
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
@@ -61,15 +34,10 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.use(express.json({ limit: '10mb' }))
-app.use(express.urlencoded({ extended: true, limit: '10mb' }))
-// Add error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(500).json({ success: false, error: err.message });
-});
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(passport.initialize());
 
-// API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/notes', notesRoutes);
 app.use('/api/youtube', youtubeRoutes);
@@ -79,26 +47,25 @@ app.use('/api/messages', messagesRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/noteShare', noteShareRoutes);
 app.use('/api/friends', friendsRoutes);
+app.use('/api/ai', aiRoutes);
 
 app.get('/', (req, res) => {
   res.send(' Backend is working');
 });
 
-// Lightweight API root health endpoint
-app.get('/api', (req, res) => {
-  res.json({ ok: true, service: 'journ-iq backend', version: '1.0', time: new Date().toISOString() });
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(500).json({ success: false, error: err.message });
 });
 
 import http from 'http';
-import setupSocket from './socket.new.js';
+import setupSocket from './socket.js';
 
 const PORT = process.env.PORT || 3000;
 const server = http.createServer(app);
 
-// Configure socket.io with proper SSL settings
 const io = setupSocket(server);
 
-// Enhanced error handling for the server
 server.on('error', (error) => {
   console.error('Server error:', error);
   if (error.code === 'EADDRINUSE') {
@@ -107,8 +74,8 @@ server.on('error', (error) => {
   }
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Backend running at http://localhost:${PORT}`);
+initRedis().then(() => {
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ Backend running at http://localhost:${PORT}`);
+  });
 });
-
-

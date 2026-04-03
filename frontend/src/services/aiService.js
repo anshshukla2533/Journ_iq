@@ -1,15 +1,4 @@
-// Intelligently resolve API URL based on environment
-const getApiUrl = () => {
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
-  }
-  if (import.meta.env.DEV) {
-    return 'http://localhost:3000/api';
-  }
-  return '/api';
-};
-
-const API_URL = getApiUrl();
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 const aiService = {
   async sendMessage(message, token) {

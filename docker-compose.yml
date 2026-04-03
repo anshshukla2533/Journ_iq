@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      target: development
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      REDIS_URL: redis://redis:6379
+      CLIENT_URL: http://localhost:5173
+    depends_on:
+      - redis
+    env_file:
+      - ./backend/.env
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  frontend:
+    build:
+      context: ./frontend
+      target: development
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      NODE_ENV: development
+      VITE_DEV_API_PROXY: http://backend:3000
+      VITE_API_URL: http://localhost:3000/api
+      VITE_SOCKET_URL: http://localhost:3000
+    depends_on:
+      - backend

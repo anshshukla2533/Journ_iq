@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { createSocket, setNotificationHandler } from '../services/socket';
-import axios from 'axios';
+import { setNotificationHandler } from '../services/socket';
+import { api, setAuthToken } from '../services/api';
 
 export default function useNotifications(token) {
   const [notifications, setNotifications] = useState([]);
@@ -8,13 +8,14 @@ export default function useNotifications(token) {
 
   const fetchNotifications = useCallback(async () => {
     if (!token) return;
+
     try {
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/notifications`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      setAuthToken(token);
+      const response = await api.get('/notifications');
       if (response.data.success) {
-        setNotifications(response.data.data);
-        setUnreadCount(response.data.data.filter(n => !n.isRead).length);
+        const items = response.data.data || [];
+        setNotifications(items);
+        setUnreadCount(items.filter((item) => !item.read && !item.isRead).length);
       }
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
@@ -23,18 +24,18 @@ export default function useNotifications(token) {
 
   const markAsRead = useCallback(async (notificationId) => {
     if (!token) return;
+
     try {
-      await axios.post(
-        `${import.meta.env.VITE_API_URL}/notifications/mark-read`,
-        { notificationId },
-        { headers: { Authorization: `Bearer ${token}` }}
-      );
-      setNotifications(prev => 
-        prev.map(n => 
-          n._id === notificationId ? { ...n, isRead: true } : n
+      setAuthToken(token);
+      await api.post('/notifications/mark-read', { notificationId });
+      setNotifications((prev) =>
+        prev.map((notification) =>
+          notification._id === notificationId || notification.id === notificationId
+            ? { ...notification, read: true, isRead: true }
+            : notification
         )
       );
-      setUnreadCount(prev => Math.max(0, prev - 1));
+      setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
     }
@@ -42,14 +43,12 @@ export default function useNotifications(token) {
 
   const markAllAsRead = useCallback(async () => {
     if (!token) return;
+
     try {
-      await axios.post(
-        `${import.meta.env.VITE_API_URL}/notifications/mark-all-read`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` }}
-      );
-      setNotifications(prev => 
-        prev.map(n => ({ ...n, isRead: true }))
+      setAuthToken(token);
+      await api.post('/notifications/mark-all-read');
+      setNotifications((prev) =>
+        prev.map((notification) => ({ ...notification, read: true, isRead: true }))
       );
       setUnreadCount(0);
     } catch (error) {
@@ -57,19 +56,37 @@ export default function useNotifications(token) {
     }
   }, [token]);
 
+  const markAsUnread = useCallback(async (notificationId) => {
+    if (!token) return;
+
+    try {
+      setAuthToken(token);
+      await api.post('/notifications/mark-unread', { notificationId });
+      setNotifications((prev) =>
+        prev.map((notification) =>
+          notification._id === notificationId || notification.id === notificationId
+            ? { ...notification, read: false, isRead: false }
+            : notification
+        )
+      );
+      setUnreadCount((prev) => prev + 1);
+    } catch (error) {
+      console.error('Failed to mark notification as unread:', error);
+    }
+  }, [token]);
+
   const handleNewNotification = useCallback((notification) => {
-    setNotifications(prev => [notification, ...prev]);
-    setUnreadCount(prev => prev + 1);
+    setNotifications((prev) => [notification, ...prev]);
+    setUnreadCount((prev) => prev + 1);
   }, []);
 
   useEffect(() => {
     if (!token) return;
-    
+
     fetchNotifications();
     setNotificationHandler(handleNewNotification);
 
-    // Refresh notifications periodically
-    const interval = setInterval(fetchNotifications, 60000); // Every minute
+    const interval = setInterval(fetchNotifications, 60000);
 
     return () => {
       clearInterval(interval);
@@ -81,7 +98,8 @@ export default function useNotifications(token) {
     notifications,
     unreadCount,
     markAsRead,
+    markAsUnread,
     markAllAsRead,
-    refresh: fetchNotifications
+    refresh: fetchNotifications,
   };
 }

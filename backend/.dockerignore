@@ -1,0 +1,17 @@
+node_modules
+npm-debug.log
+yarn-error.log
+pnpm-lock.yaml
+.git
+.gitignore
+.env
+.env.local
+coverage
+dist
+build
+.cache
+.turbo
+.next
+tmp
+temp
+*.log

@@ -1,79 +1,88 @@
-import Message from '../models/Message.js';
-import Notification from '../models/Notification.js';
-import Note from '../models/Note.js';
+import { prisma } from '../lib/prisma.js';
+import { deleteCacheKeys, notificationCacheKeys } from '../lib/cache.js';
 
 export default {
- 
   async sendMessage(req, res) {
     try {
-      const { receiverId, content, noteId, image } = req.body;
-      const senderId = req.user._id;
-      let noteToAttach = noteId;
+      const { receiverId, content, noteId } = req.body;
+      const senderId = req.user.id;
+
+      let msgContent = content;
 
       if (noteId) {
-        const originalNote = await Note.findById(noteId);
+        const originalNote = await prisma.note.findUnique({ where: { id: noteId } });
         if (originalNote) {
-          
-          const newNote = new Note({
-            owner: receiverId,
-            text: originalNote.text,
-            date: originalNote.date,
-            todos: originalNote.todos,
-            images: originalNote.images,
-            timelineTag: originalNote.timelineTag,
-            sharedWith: [senderId],
-            reminder: originalNote.reminder
+          await prisma.note.create({
+             data: {
+               userId: receiverId,
+               title: originalNote.title,
+               content: originalNote.content,
+               color: originalNote.color,
+               tags: originalNote.tags,
+               videoUrl: originalNote.videoUrl,
+               videoTitle: originalNote.videoTitle,
+               sharedWith: { connect: { id: senderId } }
+             }
           });
-          await newNote.save();
-          noteToAttach = newNote._id;
+          msgContent = msgContent + " [Attached Note]";
         }
       }
-      const message = await Message.create({ 
-        sender: senderId, 
-        receiver: receiverId, 
-        content, 
-        note: noteToAttach,
-        image: image || undefined
+
+      const message = await prisma.message.create({
+        data: {
+          senderId,
+          receiverId,
+          content: msgContent
+        }
       });
-      await Notification.create({ 
-        user: receiverId, 
-        type: 'message', 
-        message: `New message from ${req.user.name}` 
+
+      await prisma.notification.create({
+        data: {
+          userId: receiverId,
+          type: 'message',
+          data: {
+            text: `New message from ${req.user.name || 'someone'}`,
+            senderId,
+            senderName: req.user.name || 'Someone',
+            senderEmail: req.user.email || '',
+            messagePreview: msgContent?.slice(0, 90) || '',
+          } 
+        }
       });
+      await deleteCacheKeys(notificationCacheKeys(receiverId));
+
       res.status(201).json(message);
     } catch (err) {
+      console.error(err);
       res.status(400).json({ error: err.message });
     }
   },
 
-
   async getMessages(req, res) {
     try {
       const { userId } = req.params;
-      const messages = await Message.find({
-        $or: [
-          { sender: req.user._id, receiver: userId },
-          { sender: userId, receiver: req.user._id }
-        ]
-      })
-      .sort({ createdAt: 1 })
-      .populate('note', 'text');
+      const messages = await prisma.message.findMany({
+        where: {
+          OR: [
+            { senderId: req.user.id, receiverId: userId },
+            { senderId: userId, receiverId: req.user.id }
+          ]
+        },
+        orderBy: { createdAt: 'asc' }
+      });
       res.json(messages);
     } catch (err) {
       res.status(400).json({ error: err.message });
     }
   },
 
-  
   async markAsRead(req, res) {
     try {
       const { messageId } = req.body;
-      const message = await Message.findByIdAndUpdate(
-        messageId, 
-        { status: 'read' }, 
-        { new: true }
-      );
-      
+      const message = await prisma.message.update({
+        where: { id: messageId },
+        data: { read: true }
+      });
       res.json(message);
     } catch (err) {
       res.status(400).json({ error: err.message });
