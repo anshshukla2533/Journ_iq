@@ -1,10 +1,9 @@
 import express from 'express';
 import axios from 'axios';
-import { createRequire } from 'module';
+import * as youtubeTranscriptPackage from 'youtube-transcript/dist/youtube-transcript.esm.js';
 import { getCachedJson, setCachedJson } from '../lib/cache.js';
 
-const require = createRequire(import.meta.url);
-const { YoutubeTranscript } = require('youtube-transcript');
+const { YoutubeTranscript } = youtubeTranscriptPackage;
 
 const router = express.Router();
 
