@@ -85,6 +85,7 @@ export default function DashboardLayout() {
   const { user, token, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const isChatRoute = location.pathname.endsWith('/chat');
 
   const getTabFromPath = (pathname) => {
     if (pathname.endsWith('/news')) return 'news';
@@ -201,16 +202,16 @@ export default function DashboardLayout() {
       <div className="lg:ml-72 flex-1 flex flex-col">
         <DashboardHeader userName={user?.name || user?.email} onLogout={logout} />
 
-        <div className="px-4 lg:px-8 py-6 flex-1">
-          <main className="flex-1 min-h-[calc(100vh-200px)]">
-            <div className="max-w-7xl mx-auto py-6 relative">
+        <div className={`flex-1 ${isChatRoute ? 'px-2 py-2 lg:px-8 lg:py-6' : 'px-4 py-6 lg:px-8'}`}>
+          <main className={`flex-1 ${isChatRoute ? 'min-h-[calc(100dvh-7rem)] lg:min-h-[calc(100vh-200px)]' : 'min-h-[calc(100vh-200px)]'}`}>
+            <div className={`max-w-7xl mx-auto relative ${isChatRoute ? 'py-0 lg:py-6' : 'py-6'}`}>
               <Outlet />
             </div>
           </main>
         </div>
       </div>
 
-      <footer className="mt-auto text-center py-4 text-sm text-gray-400 bg-white/5 backdrop-blur-md">
+      <footer className={`mt-auto text-center py-4 text-sm text-gray-400 bg-white/5 backdrop-blur-md ${isChatRoute ? 'hidden lg:block' : ''}`}>
         Developed by Ansh · © 2025
       </footer>
 

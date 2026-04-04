@@ -489,6 +489,15 @@ const Chat = ({
     <div className="relative flex h-full w-full flex-col bg-[linear-gradient(180deg,#f9f1e5_0%,#f5ecde_100%)]">
       <div className="z-10 flex shrink-0 items-center justify-between border-b border-[#eadfce] bg-white/85 p-4 backdrop-blur-md">
         <div className="flex items-center gap-3">
+          <button
+            className="rounded-full border border-[#eadfce] bg-white p-2 text-[#8d6948] transition hover:border-[#c49a6c] hover:bg-[#fff6eb] lg:hidden"
+            onClick={onClose}
+            aria-label="Back to chats"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
           <div className="relative">
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[linear-gradient(135deg,#c99a6b_0%,#b88455_100%)] font-bold text-white shadow-[0_14px_30px_rgba(184,132,85,0.2)]">
               {(friend.name || friend.email)?.[0]?.toUpperCase()}
@@ -502,14 +511,9 @@ const Chat = ({
             </span>
           </div>
         </div>
-        <button
-          className="rounded-xl border border-[#eadfce] bg-white p-2 text-[#8d6948] transition hover:border-[#c49a6c] hover:bg-[#fff6eb] lg:hidden"
-          onClick={onClose}
-        >
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+        <div className="hidden rounded-full border border-[#eadfce] bg-[#fff9f2] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#9d8262] sm:block">
+          Conversation
+        </div>
       </div>
 
       <div className="custom-scrollbar flex-1 overflow-y-auto bg-[radial-gradient(circle_at_top_right,rgba(217,184,140,0.18),transparent_24%),radial-gradient(circle_at_bottom_left,rgba(183,195,154,0.14),transparent_28%),linear-gradient(180deg,#f9f1e5_0%,#f5ecde_100%)] p-4 md:p-5">

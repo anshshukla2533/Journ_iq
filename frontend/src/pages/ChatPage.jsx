@@ -8,10 +8,12 @@ export default function ChatPage() {
   const [chatFriend, setChatFriend] = useState(null);
   const [pendingShare, setPendingShare] = useState(null);
   const [friendsLoading, setFriendsLoading] = useState(true);
+  const [isMobileListOpen, setIsMobileListOpen] = useState(false);
 
   useEffect(() => {
     if (location.state?.chatFriend) {
       setChatFriend(location.state.chatFriend);
+      setIsMobileListOpen(false);
       setPendingShare({
         draft: location.state.draftMessage || '',
         noteId: location.state.sharedNoteId || null,
@@ -22,45 +24,42 @@ export default function ChatPage() {
     }
   }, [location.state]);
 
+  const showFriendsPanel = !chatFriend || isMobileListOpen;
+
   return (
-    <div className="animate-fade-in flex min-h-[calc(100dvh-7.5rem)] flex-col lg:h-[calc(100vh-140px)]">
-      <div className="relative flex flex-1 overflow-hidden rounded-[1.5rem] border border-[#eadfce] bg-[linear-gradient(135deg,#fffdf8_0%,#f7f0e5_55%,#f3ebdd_100%)] shadow-[0_24px_80px_rgba(122,92,56,0.12)] lg:rounded-[2rem]">
+    <div className="animate-fade-in flex min-h-[calc(100dvh-6.5rem)] flex-col lg:h-[calc(100vh-140px)]">
+      <div className="relative flex flex-1 overflow-hidden rounded-[1.25rem] border border-[#eadfce] bg-[linear-gradient(135deg,#fffdf8_0%,#f7f0e5_55%,#f3ebdd_100%)] shadow-[0_24px_80px_rgba(122,92,56,0.12)] lg:rounded-[2rem]">
         <div className="absolute -left-8 top-16 h-28 w-28 rounded-full bg-[#d9b88c]/20 blur-3xl" />
         <div className="absolute bottom-0 right-0 h-36 w-36 rounded-full bg-[#b7c39a]/20 blur-3xl" />
 
-        <div className={`z-10 border-b border-[#eadfce] bg-white/70 backdrop-blur-sm lg:w-[380px] lg:border-b-0 lg:border-r ${chatFriend ? 'hidden lg:block' : 'block w-full'}`}>
+        <div className={`z-20 border-b border-[#eadfce] bg-white/80 backdrop-blur-sm lg:w-[380px] lg:border-b-0 lg:border-r ${
+          showFriendsPanel ? 'absolute inset-0 block w-full lg:static' : 'hidden lg:block'
+        }`}>
           <Friends
+            activeFriendId={chatFriend?._id || chatFriend?.id || ''}
             onFriendsLoaded={(friends, isLoading) => {
               setFriendsLoading(isLoading);
-              if (!isLoading && !chatFriend && !pendingShare && friends.length === 1) {
+              if (!isLoading && !chatFriend && !pendingShare && friends.length === 1 && window.innerWidth >= 1024) {
                 setChatFriend(friends[0]);
               }
             }}
             onStartChat={friend => {
               setPendingShare(null);
               setChatFriend(friend);
+              setIsMobileListOpen(false);
             }}
           />
         </div>
 
         <div className={`z-10 min-w-0 flex flex-1 flex-col ${!chatFriend ? 'hidden lg:flex' : 'flex'}`}>
           {chatFriend ? (
-            <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden lg:flex-row">
-              <div className="shrink-0 border-b border-[#eadfce] bg-white/80 p-3 lg:hidden">
-                <button
-                  onClick={() => setChatFriend(null)}
-                  className="flex items-center text-sm font-medium text-[#8d6948] transition hover:text-[#2f2720]"
-                >
-                  <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  Back to Friends
-                </button>
-              </div>
+            <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden">
               <div className="h-full min-w-0 flex-1 overflow-hidden">
                 <Chat
                   friend={chatFriend}
-                  onClose={() => setChatFriend(null)}
+                  onClose={() => {
+                    setIsMobileListOpen(true);
+                  }}
                   initialDraft={pendingShare?.draft || ''}
                   initialNoteId={pendingShare?.noteId || null}
                   initialNoteTitle={pendingShare?.noteTitle || ''}
@@ -85,7 +84,7 @@ export default function ChatPage() {
                   </div>
                   <p className="font-['Sora'] text-xl font-semibold text-[#2f2720]">Open a chat</p>
                   <p className="mt-2 max-w-sm text-sm leading-7 text-[#73685d]">
-                    Pick someone from the left and the conversation will stay here, like one stable messaging screen.
+                    Pick someone from your chats and the conversation will open here like one stable messaging screen.
                   </p>
                 </div>
               )}

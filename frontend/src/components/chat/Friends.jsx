@@ -20,7 +20,21 @@ const formatLastSeen = (value) => {
   return `Last seen ${date.toLocaleDateString([], { month: 'short', day: 'numeric' })}`;
 };
 
-const Friends = ({ onStartChat, onFriendsLoaded }) => {
+const formatMessageTime = (value) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+
+  const now = new Date();
+  const isSameDay = date.toDateString() === now.toDateString();
+  if (isSameDay) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+};
+
+const Friends = ({ onStartChat, onFriendsLoaded, activeFriendId = '' }) => {
   const { token, user } = useAuth();
   const [query, setQuery] = useState('');
   const [searching, setSearching] = useState(false);
@@ -210,13 +224,20 @@ const Friends = ({ onStartChat, onFriendsLoaded }) => {
     return Array.from(map.values());
   }, [friends]);
 
-  const sortedFriends = useMemo(
-    () =>
-      uniqueFriends
-        .slice()
-        .sort((a, b) => (b.online ? 1 : 0) - (a.online ? 1 : 0) || (a.name || '').localeCompare(b.name || '')),
-    [uniqueFriends]
-  );
+  const sortedFriends = useMemo(() => {
+    return uniqueFriends
+      .slice()
+      .sort((a, b) => {
+        const aId = String(a.id || a._id || '');
+        const bId = String(b.id || b._id || '');
+        const aRecent = recentMessages[aId]?.updatedAt ? new Date(recentMessages[aId].updatedAt).getTime() : 0;
+        const bRecent = recentMessages[bId]?.updatedAt ? new Date(recentMessages[bId].updatedAt).getTime() : 0;
+
+        if (bRecent !== aRecent) return bRecent - aRecent;
+        if ((b.online ? 1 : 0) !== (a.online ? 1 : 0)) return (b.online ? 1 : 0) - (a.online ? 1 : 0);
+        return (a.name || a.email || '').localeCompare(b.name || b.email || '');
+      });
+  }, [uniqueFriends, recentMessages]);
 
   const pendingRequestEmails = useMemo(
     () => new Set((requests || []).map((request) => String(request?.senderEmail || '').toLowerCase())),
@@ -244,22 +265,26 @@ const Friends = ({ onStartChat, onFriendsLoaded }) => {
   }, [sortedFriends, friendsLoading, onFriendsLoaded]);
 
   return (
-    <div className="flex h-full flex-col p-5">
-      <div className="mb-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#a2805c]">People</p>
-        <h3 className="mt-2 font-['Sora'] text-xl font-semibold text-[#2f2720]">Friends and requests</h3>
-        <p className="mt-2 text-sm leading-6 text-[#776d62]">
-          Search anyone, accept requests, and jump into focused conversations.
-        </p>
-      </div>
+    <div className="flex h-full flex-col bg-[linear-gradient(180deg,#fffdfa_0%,#f7f0e6_100%)]">
+      <div className="sticky top-0 z-10 border-b border-[#efe2d1] bg-[linear-gradient(180deg,rgba(255,253,249,0.98),rgba(250,244,235,0.94))] px-4 pb-4 pt-5 backdrop-blur-md">
+        <div className="mb-4 flex items-end justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[#a2805c]">Inbox</p>
+            <h3 className="mt-2 font-['Sora'] text-2xl font-semibold text-[#2f2720]">Chats</h3>
+          </div>
+          <div className="rounded-2xl border border-[#eadfce] bg-white/80 px-3 py-2 text-right shadow-[0_12px_24px_rgba(122,92,56,0.06)]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#a18a72]">Active</p>
+            <p className="text-sm font-semibold text-[#2f2720]">{sortedFriends.length}</p>
+          </div>
+        </div>
 
-      <div className="relative mb-5">
+        <div className="relative">
         <input
           type="text"
           value={query}
           onChange={e => setQuery(e.target.value)}
-          placeholder="Search users by name or email"
-          className="w-full rounded-2xl border border-[#e7dac7] bg-[#fffdf9] py-3 pl-11 pr-4 text-sm text-[#2f2720] outline-none transition focus:border-[#c49a6c] focus:ring-4 focus:ring-[#c49a6c]/15"
+          placeholder="Search or start a new chat"
+          className="w-full rounded-[1.4rem] border border-[#e7dac7] bg-[#fffdf9] py-3 pl-11 pr-4 text-sm text-[#2f2720] outline-none transition focus:border-[#c49a6c] focus:ring-4 focus:ring-[#c49a6c]/15"
         />
         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#a68d74]">
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -267,8 +292,9 @@ const Friends = ({ onStartChat, onFriendsLoaded }) => {
           </svg>
         </span>
       </div>
+      </div>
 
-      <div className="custom-scrollbar flex-1 overflow-y-auto pr-1">
+      <div className="custom-scrollbar flex-1 overflow-y-auto px-4 pb-5 pt-4">
         {requestFeedback ? (
           <div
             className={`mb-4 rounded-2xl border px-4 py-3 text-sm ${
@@ -374,7 +400,10 @@ const Friends = ({ onStartChat, onFriendsLoaded }) => {
         )}
 
         <div className="mb-2">
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-[#a2805c]">All Friends ({sortedFriends.length})</h3>
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-xs font-semibold uppercase tracking-[0.22em] text-[#a2805c]">Recent Chats</h3>
+            <span className="text-xs font-medium text-[#9d8a78]">{sortedFriends.length} contacts</span>
+          </div>
           <ul className="space-y-2">
             {friendsLoading && (
               <>
@@ -401,7 +430,11 @@ const Friends = ({ onStartChat, onFriendsLoaded }) => {
             {sortedFriends.map(f => (
               <li
                 key={(f.email || '') + '-' + (f._id || '')}
-                className="group flex cursor-pointer items-center justify-between rounded-2xl border border-transparent bg-white/50 p-3 transition hover:border-[#dbc3a4] hover:bg-white hover:shadow-[0_12px_30px_rgba(122,92,56,0.08)]"
+                className={`group flex cursor-pointer items-center gap-3 rounded-[1.45rem] border p-3 transition hover:border-[#dbc3a4] hover:bg-white hover:shadow-[0_12px_30px_rgba(122,92,56,0.08)] ${
+                  String(f.id || f._id) === String(activeFriendId)
+                    ? 'border-[#d2b08a] bg-white shadow-[0_12px_30px_rgba(122,92,56,0.08)]'
+                    : 'border-transparent bg-white/65'
+                }`}
                 onClick={() => {
                   try {
                     const key = 'chatUnreadCounts';
@@ -414,33 +447,42 @@ const Friends = ({ onStartChat, onFriendsLoaded }) => {
                   onStartChat(f);
                 }}
               >
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#e6d6c3] bg-[#f7f1e7] font-bold text-[#7a6857] transition group-hover:border-[#d2b08a] group-hover:bg-[#fff6eb] group-hover:text-[#8d6948]">
-                      {(f.name || f.email)?.[0]?.toUpperCase()}
-                    </div>
-                    {f.online && <span className="absolute -bottom-0 -right-0 h-3 w-3 rounded-full border-2 border-white bg-[#7f9a5c]" />}
+                <div className="relative shrink-0">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#e6d6c3] bg-[#f7f1e7] font-bold text-[#7a6857] transition group-hover:border-[#d2b08a] group-hover:bg-[#fff6eb] group-hover:text-[#8d6948]">
+                    {(f.name || f.email)?.[0]?.toUpperCase()}
                   </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-[#2f2720]">{f.name || f.email}</span>
-                    <span className="w-40 truncate text-xs text-[#8d8174]">
-                      {typingUsers[String(f.id || f._id)]
-                        ? 'typing...'
-                        : recentMessages[String(f.id || f._id)]?.lastText || (f.online ? 'Online now' : formatLastSeen(f.lastLogin))}
-                    </span>
+                  {f.online && <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white bg-[#7f9a5c]" />}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-[#2f2720]">{f.name || f.email}</p>
+                      <p className={`mt-1 truncate text-xs ${typingUsers[String(f.id || f._id)] ? 'font-medium text-[#7f9a5c]' : 'text-[#8d8174]'}`}>
+                        {typingUsers[String(f.id || f._id)]
+                          ? 'typing...'
+                          : recentMessages[String(f.id || f._id)]?.lastText || (f.online ? 'Online now' : formatLastSeen(f.lastLogin))}
+                      </p>
+                    </div>
+
+                    <div className="flex shrink-0 flex-col items-end gap-2">
+                      <span className="text-[11px] font-medium text-[#a18a72]">
+                        {formatMessageTime(recentMessages[String(f.id || f._id)]?.updatedAt || f.lastLogin)}
+                      </span>
+                      {unreadCounts[String(f.id || f._id)] ? (
+                        <div className="flex min-w-6 items-center justify-center rounded-full bg-[#7f9a5c] px-2 py-1 text-[11px] font-bold text-white shadow-sm">
+                          {unreadCounts[String(f.id || f._id)]}
+                        </div>
+                      ) : (
+                        <div className="h-5 w-5 text-[#b88455] opacity-0 transition group-hover:opacity-100">
+                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-                {unreadCounts[String(f.id || f._id)] ? (
-                  <div className="flex min-w-6 items-center justify-center rounded-full bg-[#7f9a5c] px-2 py-1 text-[11px] font-bold text-white shadow-sm">
-                    {unreadCounts[String(f.id || f._id)]}
-                  </div>
-                ) : (
-                  <div className="text-[#b88455] opacity-0 transition group-hover:opacity-100">
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                  </div>
-                )}
               </li>
             ))}
             {!friendsLoading && sortedFriends.length === 0 && (
