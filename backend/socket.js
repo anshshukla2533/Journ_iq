@@ -216,18 +216,23 @@ export default function setupSocket(server) {
 
           const formattedMessage = { ...message, _id: message.id };
 
-          const notification = await createNotification(receiverId, 'message', {
-            senderId: userId,
-            senderName: userName,
-            messageId: message.id,
-            messagePreview: msgContent.substring(0, 50) + (msgContent.length > 50 ? '...' : '')
-          });
-
-          emitToUser(receiverId, 'message:received', { message: formattedMessage, notification });
+          emitToUser(receiverId, 'message:received', { message: formattedMessage });
           emitToUser(receiverId, 'receive_message', { conversationId: resolved.conversationId, message: formattedMessage });
 
           socket.emit('message:sent', { tempId, message: formattedMessage });
           socket.emit('message_sent', { tempId, conversationId: resolved.conversationId, message: formattedMessage });
+
+          void createNotification(receiverId, 'message', {
+            senderId: userId,
+            senderName: userName,
+            messageId: message.id,
+            messagePreview: msgContent.substring(0, 50) + (msgContent.length > 50 ? '...' : '')
+          }).then((notification) => {
+            if (!notification) return;
+            emitToUser(receiverId, 'notification', notification);
+          }).catch((notificationError) => {
+            console.error('Message notification error:', notificationError);
+          });
 
         } catch (err) {
           console.error('Message send error:', err);
