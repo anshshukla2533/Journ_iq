@@ -119,6 +119,7 @@ export default function DashboardLayout() {
     if (!token) return;
 
     let socket;
+    let handleReceiveMessage;
     try {
       socket = createSocket(token);
 
@@ -147,7 +148,7 @@ export default function DashboardLayout() {
         } catch (_) {}
       };
 
-      socket.on('receive_message', (payload) => {
+      handleReceiveMessage = (payload) => {
         const message = payload?.message || payload;
         const senderId = getId(message?.sender);
         const recipientId = getId(message?.receiver || message?.recipient);
@@ -156,13 +157,17 @@ export default function DashboardLayout() {
 
         bumpRecents(friendId, message);
         incrementUnread(friendId);
-      });
+      };
+
+      socket.on('receive_message', handleReceiveMessage);
     } catch (err) {
       console.error('Socket connection error:', err);
     }
 
     return () => {
-      if (socket) socket.disconnect();
+      if (socket && handleReceiveMessage) {
+        socket.off('receive_message', handleReceiveMessage);
+      }
     };
   }, [token, user]);
 

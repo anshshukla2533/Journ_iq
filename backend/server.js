@@ -14,6 +14,7 @@ import notificationsRoutes from './routes/notifications.js';
 import noteShareRoutes from './routes/noteShare.js';
 import friendsRoutes from './routes/friends.js';
 import { initRedis } from './lib/redis.js';
+import { prisma } from './lib/prisma.js';
 import passport from './config/passport.js';
 import aiRoutes from './routes/ai.js';
 
@@ -74,7 +75,17 @@ server.on('error', (error) => {
   }
 });
 
-initRedis().then(() => {
+initRedis().then(async () => {
+  try {
+    await prisma.user.updateMany({
+      data: {
+        online: false,
+      },
+    });
+  } catch (error) {
+    console.error('Failed to reset user presence on startup:', error);
+  }
+
   server.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Backend running at http://localhost:${PORT}`);
   });

@@ -23,8 +23,8 @@ export default function ChatPage() {
   }, [location.state]);
 
   return (
-    <div className="animate-fade-in flex h-[calc(100vh-140px)] flex-col">
-      <div className="relative flex flex-1 overflow-hidden rounded-[2rem] border border-[#eadfce] bg-[linear-gradient(135deg,#fffdf8_0%,#f7f0e5_55%,#f3ebdd_100%)] shadow-[0_24px_80px_rgba(122,92,56,0.12)]">
+    <div className="animate-fade-in flex min-h-[calc(100dvh-7.5rem)] flex-col lg:h-[calc(100vh-140px)]">
+      <div className="relative flex flex-1 overflow-hidden rounded-[1.5rem] border border-[#eadfce] bg-[linear-gradient(135deg,#fffdf8_0%,#f7f0e5_55%,#f3ebdd_100%)] shadow-[0_24px_80px_rgba(122,92,56,0.12)] lg:rounded-[2rem]">
         <div className="absolute -left-8 top-16 h-28 w-28 rounded-full bg-[#d9b88c]/20 blur-3xl" />
         <div className="absolute bottom-0 right-0 h-36 w-36 rounded-full bg-[#b7c39a]/20 blur-3xl" />
 
@@ -43,9 +43,9 @@ export default function ChatPage() {
           />
         </div>
 
-        <div className={`z-10 flex flex-1 flex-col ${!chatFriend ? 'hidden lg:flex' : 'flex'}`}>
+        <div className={`z-10 min-w-0 flex flex-1 flex-col ${!chatFriend ? 'hidden lg:flex' : 'flex'}`}>
           {chatFriend ? (
-            <div className="flex h-full flex-1 overflow-hidden">
+            <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden lg:flex-row">
               <div className="shrink-0 border-b border-[#eadfce] bg-white/80 p-3 lg:hidden">
                 <button
                   onClick={() => setChatFriend(null)}
@@ -57,7 +57,7 @@ export default function ChatPage() {
                   Back to Friends
                 </button>
               </div>
-              <div className="h-full flex-1 overflow-hidden">
+              <div className="h-full min-w-0 flex-1 overflow-hidden">
                 <Chat
                   friend={chatFriend}
                   onClose={() => setChatFriend(null)}
@@ -69,7 +69,7 @@ export default function ChatPage() {
               </div>
             </div>
           ) : (
-            <div className="flex flex-1 items-center justify-center bg-[linear-gradient(180deg,rgba(255,255,255,0.18),rgba(255,255,255,0.04))] p-8">
+            <div className="flex flex-1 items-center justify-center bg-[linear-gradient(180deg,rgba(255,255,255,0.18),rgba(255,255,255,0.04))] p-5 lg:p-8">
               {friendsLoading ? (
                 <div className="w-full max-w-md space-y-4">
                   <div className="mx-auto h-14 w-14 animate-pulse rounded-full bg-white/70" />

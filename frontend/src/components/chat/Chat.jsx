@@ -48,6 +48,7 @@ const Chat = ({
   initialNoteAlreadyShared = false,
 }) => {
   const { token, user } = useAuth();
+  const activeFriendId = String(friend?._id || friend?.id || '');
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [attachedNote, setAttachedNote] = useState(null);
@@ -83,12 +84,10 @@ const Chat = ({
     const receiver = message?.receiver || message?.recipient;
     const receiverId = getId(message?.receiverId || receiver);
     const myId = String(user?.id || '');
-    const friendId = String(friend?._id || '');
-
     return (
       senderId === myId ||
       senderEmail === getEmail(user?.email) ||
-      (senderId === myId && receiverId === friendId)
+      (senderId === myId && receiverId === activeFriendId)
     );
   };
 
@@ -100,20 +99,20 @@ const Chat = ({
 
   const stopTyping = () => {
     clearTimeout(typingTimeoutRef.current);
-    if (typingSentRef.current && socketRef.current?.connected && friend?._id) {
+    if (typingSentRef.current && socketRef.current?.connected && activeFriendId) {
       try {
-        socketRef.current.emit('typing:stop', { receiverId: friend._id });
+        socketRef.current.emit('typing:stop', { receiverId: activeFriendId });
       } catch {}
     }
     typingSentRef.current = false;
   };
 
   const emitTyping = () => {
-    if (!friend?._id || !socketRef.current?.connected) return;
+    if (!activeFriendId || !socketRef.current?.connected) return;
 
     if (!typingSentRef.current) {
       try {
-        socketRef.current.emit('typing:start', { receiverId: friend._id });
+        socketRef.current.emit('typing:start', { receiverId: activeFriendId });
       } catch {}
       typingSentRef.current = true;
     }
@@ -139,21 +138,21 @@ const Chat = ({
     } else {
       setAttachedNote(null);
     }
-  }, [initialDraft, initialNoteId, initialNoteTitle, initialNoteAlreadyShared, friend?._id]);
+  }, [initialDraft, initialNoteId, initialNoteTitle, initialNoteAlreadyShared, activeFriendId]);
 
   useEffect(() => {
     setErrorMessage('');
-  }, [friend?._id]);
+  }, [activeFriendId]);
 
   useEffect(() => {
     setPresence({
       online: Boolean(friend?.online),
       lastSeen: friend?.lastLogin || null,
     });
-  }, [friend?._id, friend?.online, friend?.lastLogin]);
+  }, [activeFriendId, friend?.online, friend?.lastLogin]);
 
   useEffect(() => {
-    if (!token || !friend?._id) return;
+    if (!token || !activeFriendId) return;
 
     if (cacheKey && conversationCache.has(cacheKey)) {
       setMessages(conversationCache.get(cacheKey));
@@ -170,7 +169,7 @@ const Chat = ({
     const markMessagesRead = (list) => {
       list.forEach((message) => {
         const senderId = getId(message?.senderId || message?.sender);
-        const isIncoming = senderId === String(friend._id);
+        const isIncoming = senderId === activeFriendId;
         const isUnread = !message.read;
         const messageId = msgId(message);
         if (isIncoming && isUnread && messageId) {
@@ -189,7 +188,7 @@ const Chat = ({
 
     const onConnect = () => {
       try {
-        socketRef.current.emit('fetch_messages', { friendId: friend._id });
+        socketRef.current.emit('fetch_messages', { friendId: activeFriendId });
       } catch {}
 
       const queue = pendingQueueRef.current;
@@ -235,10 +234,9 @@ const Chat = ({
       if (id && seenIds.current.has(id)) return;
 
       const me = String(user?.id || '');
-      const friendId = String(friend._id);
       const senderId = getId(message.sender);
       const receiverId = getId(message.receiver || message.recipient);
-      if (!((senderId === me || receiverId === me) && (senderId === friendId || receiverId === friendId))) return;
+      if (!((senderId === me || receiverId === me) && (senderId === activeFriendId || receiverId === activeFriendId))) return;
       if (isMine(message)) return;
 
       const normalized = { ...message, read: true, status: 'received' };
@@ -317,12 +315,12 @@ const Chat = ({
     };
 
     const onTyping = ({ userId, typing: isTyping }) => {
-      if (String(userId) !== String(friend._id)) return;
+      if (String(userId) !== activeFriendId) return;
       setTyping(Boolean(isTyping));
     };
 
     const onFriendOnline = ({ userId, timestamp }) => {
-      if (String(userId) !== String(friend._id)) return;
+      if (String(userId) !== activeFriendId) return;
       setPresence({
         online: true,
         lastSeen: timestamp || new Date().toISOString(),
@@ -330,7 +328,7 @@ const Chat = ({
     };
 
     const onFriendOffline = ({ userId, timestamp }) => {
-      if (String(userId) !== String(friend._id)) return;
+      if (String(userId) !== activeFriendId) return;
       setPresence({
         online: false,
         lastSeen: timestamp || new Date().toISOString(),
@@ -339,8 +337,11 @@ const Chat = ({
 
     socketRef.current.on('connect', onConnect);
     socketRef.current.on('messages_history', onHistory);
+    socketRef.current.on('messages:history', onHistory);
     socketRef.current.on('receive_message', onReceive);
+    socketRef.current.on('message:received', onReceive);
     socketRef.current.on('message_sent', onSent);
+    socketRef.current.on('message:sent', onSent);
     socketRef.current.on('message:status', onStatus);
     socketRef.current.on('message:error', onMessageError);
     socketRef.current.on('user_typing', onTyping);
@@ -359,8 +360,11 @@ const Chat = ({
       try {
         socketRef.current?.off('connect', onConnect);
         socketRef.current?.off('messages_history', onHistory);
+        socketRef.current?.off('messages:history', onHistory);
         socketRef.current?.off('receive_message', onReceive);
+        socketRef.current?.off('message:received', onReceive);
         socketRef.current?.off('message_sent', onSent);
+        socketRef.current?.off('message:sent', onSent);
         socketRef.current?.off('message:status', onStatus);
         socketRef.current?.off('message:error', onMessageError);
         socketRef.current?.off('user_typing', onTyping);
@@ -370,7 +374,7 @@ const Chat = ({
         socketRef.current?.off('user_offline', onFriendOffline);
       } catch {}
     };
-  }, [token, friend?._id, friend?.email, user?.email, user?.id, cacheKey]);
+  }, [token, activeFriendId, friend?.email, user?.email, user?.id, cacheKey]);
 
   const send = () => {
     if (!input.trim() && !attachedNote?.id) return;
@@ -383,7 +387,7 @@ const Chat = ({
     const tempMessage = {
       _id: tempId,
       sender: user?.id,
-      receiver: friend._id,
+      receiver: activeFriendId,
       text: tempText,
       content: tempText,
       status: 'sending',
@@ -398,7 +402,7 @@ const Chat = ({
     });
 
     const payload = {
-      receiverId: friend._id,
+      receiverId: activeFriendId,
       content: input.trim() || `Sharing my note: ${attachedNote?.title || 'Study note'}`,
       noteId: attachedNote?.id && !attachedNote?.alreadyShared ? attachedNote.id : undefined,
       tempId,
@@ -452,7 +456,7 @@ const Chat = ({
     });
 
     return groups;
-  }, [messages, friend?._id]);
+  }, [messages, activeFriendId]);
 
   return (
     <div className="relative flex h-full w-full flex-col bg-[linear-gradient(180deg,#f9f1e5_0%,#f5ecde_100%)]">

@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import aiService from '../../services/aiService';
 
 export default function JournAIAssistant() {
   const { token } = useAuth();
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [question, setQuestion] = useState('');
   const [messages, setMessages] = useState([
@@ -52,21 +54,25 @@ export default function JournAIAssistant() {
     }
   };
 
+  const hideOnCompactChat = location.pathname === '/dashboard/chat' && !isOpen;
+
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
-        className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[linear-gradient(135deg,#b88455_0%,#8a9a5b_100%)] text-white shadow-[0_18px_45px_rgba(122,92,56,0.28)] transition hover:scale-[1.03] lg:bottom-8 lg:right-8"
-        aria-label="Open JournAI"
-      >
-        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.9} d="M12 4V2m0 20v-2m8-8h2M2 12h2m13.657-5.657 1.414-1.414M4.929 19.071l1.414-1.414m12.728 1.414-1.414-1.414M6.343 6.343 4.929 4.929M8.5 9.5h7v5h-7z" />
-        </svg>
-      </button>
+      {!hideOnCompactChat ? (
+        <button
+          type="button"
+          onClick={() => setIsOpen((prev) => !prev)}
+          className="fixed bottom-20 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[linear-gradient(135deg,#b88455_0%,#8a9a5b_100%)] text-white shadow-[0_18px_45px_rgba(122,92,56,0.28)] transition hover:scale-[1.03] lg:bottom-8 lg:right-8 lg:h-14 lg:w-14"
+          aria-label="Open JournAI"
+        >
+          <svg className="h-5 w-5 lg:h-6 lg:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.9} d="M12 4V2m0 20v-2m8-8h2M2 12h2m13.657-5.657 1.414-1.414M4.929 19.071l1.414-1.414m12.728 1.414-1.414-1.414M6.343 6.343 4.929 4.929M8.5 9.5h7v5h-7z" />
+          </svg>
+        </button>
+      ) : null}
 
       {isOpen ? (
-        <div className="fixed bottom-24 right-4 z-40 w-[calc(100vw-2rem)] max-w-[380px] rounded-[1.75rem] border border-[#eadfce] bg-[linear-gradient(180deg,#fffefb_0%,#f7f0e5_100%)] shadow-[0_22px_60px_rgba(122,92,56,0.22)] backdrop-blur-xl lg:bottom-28 lg:right-8">
+        <div className="fixed bottom-24 right-3 z-40 w-[calc(100vw-1.5rem)] max-w-[380px] rounded-[1.5rem] border border-[#eadfce] bg-[linear-gradient(180deg,#fffefb_0%,#f7f0e5_100%)] shadow-[0_22px_60px_rgba(122,92,56,0.22)] backdrop-blur-xl lg:bottom-28 lg:right-8 lg:w-[calc(100vw-2rem)] lg:rounded-[1.75rem]">
           <div className="flex items-start justify-between gap-4 border-b border-[#eadfce] px-5 py-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#a2805c]">JournAI</p>
