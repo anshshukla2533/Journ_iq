@@ -1,7 +1,9 @@
 import express from 'express';
 import axios from 'axios';
-import { YoutubeTranscript } from 'youtube-transcript';
+import youtubeTranscriptPackage from 'youtube-transcript';
 import { getCachedJson, setCachedJson } from '../lib/cache.js';
+
+const { YoutubeTranscript } = youtubeTranscriptPackage;
 
 const router = express.Router();
 
