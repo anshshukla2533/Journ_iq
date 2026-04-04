@@ -27,12 +27,12 @@ export default function ChatPage() {
   const showFriendsPanel = !chatFriend || isMobileListOpen;
 
   return (
-    <div className="animate-fade-in flex min-h-[calc(100dvh-6.5rem)] flex-col lg:h-[calc(100vh-140px)]">
-      <div className="relative flex flex-1 overflow-hidden rounded-[1.25rem] border border-[#eadfce] bg-[linear-gradient(135deg,#fffdf8_0%,#f7f0e5_55%,#f3ebdd_100%)] shadow-[0_24px_80px_rgba(122,92,56,0.12)] lg:rounded-[2rem]">
+    <div className="animate-fade-in flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="relative flex flex-1 min-h-0 overflow-hidden rounded-[1.25rem] border border-[#eadfce] bg-[linear-gradient(135deg,#fffdf8_0%,#f7f0e5_55%,#f3ebdd_100%)] shadow-[0_24px_80px_rgba(122,92,56,0.12)] lg:rounded-[2rem]">
         <div className="absolute -left-8 top-16 h-28 w-28 rounded-full bg-[#d9b88c]/20 blur-3xl" />
         <div className="absolute bottom-0 right-0 h-36 w-36 rounded-full bg-[#b7c39a]/20 blur-3xl" />
 
-        <div className={`z-20 border-b border-[#eadfce] bg-white/80 backdrop-blur-sm lg:w-[380px] lg:border-b-0 lg:border-r ${
+        <div className={`z-20 min-h-0 border-b border-[#eadfce] bg-white/80 backdrop-blur-sm lg:w-[380px] lg:border-b-0 lg:border-r ${
           showFriendsPanel ? 'absolute inset-0 block w-full lg:static' : 'hidden lg:block'
         }`}>
           <Friends
@@ -51,10 +51,10 @@ export default function ChatPage() {
           />
         </div>
 
-        <div className={`z-10 min-w-0 flex flex-1 flex-col ${!chatFriend ? 'hidden lg:flex' : 'flex'}`}>
+        <div className={`z-10 min-w-0 min-h-0 flex flex-1 flex-col ${!chatFriend ? 'hidden lg:flex' : 'flex'}`}>
           {chatFriend ? (
-            <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden">
-              <div className="h-full min-w-0 flex-1 overflow-hidden">
+            <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+              <div className="h-full min-h-0 min-w-0 flex-1 overflow-hidden">
                 <Chat
                   friend={chatFriend}
                   onClose={() => {

@@ -173,7 +173,7 @@ export default function DashboardLayout() {
   }, [token, user]);
 
   return (
-    <div className="dashboard-page min-h-screen flex flex-col pt-16 lg:pt-0">
+    <div className={`dashboard-page flex flex-col pt-16 lg:pt-0 ${isChatRoute ? 'h-dvh overflow-hidden' : 'min-h-screen'}`}>
       <button
         className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-indigo-600 text-white shadow-lg"
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -199,12 +199,12 @@ export default function DashboardLayout() {
         <SidebarNav tabs={TABS} activeTab={activeTab} onTabClick={handleTabClick} />
       </div>
 
-      <div className="lg:ml-72 flex-1 flex flex-col">
+      <div className={`lg:ml-72 flex-1 flex flex-col ${isChatRoute ? 'min-h-0 overflow-hidden' : ''}`}>
         <DashboardHeader userName={user?.name || user?.email} onLogout={logout} />
 
-        <div className={`flex-1 ${isChatRoute ? 'px-2 py-2 lg:px-8 lg:py-6' : 'px-4 py-6 lg:px-8'}`}>
-          <main className={`flex-1 ${isChatRoute ? 'min-h-[calc(100dvh-7rem)] lg:min-h-[calc(100vh-200px)]' : 'min-h-[calc(100vh-200px)]'}`}>
-            <div className={`max-w-7xl mx-auto relative ${isChatRoute ? 'py-0 lg:py-6' : 'py-6'}`}>
+        <div className={`flex-1 ${isChatRoute ? 'min-h-0 overflow-hidden px-2 py-2 lg:px-8 lg:py-6' : 'px-4 py-6 lg:px-8'}`}>
+          <main className={`flex-1 ${isChatRoute ? 'h-full min-h-0 overflow-hidden' : 'min-h-[calc(100vh-200px)]'}`}>
+            <div className={`max-w-7xl mx-auto relative ${isChatRoute ? 'flex h-full min-h-0 flex-col py-0 lg:py-6' : 'py-6'}`}>
               <Outlet />
             </div>
           </main>

@@ -486,7 +486,7 @@ const Chat = ({
   }, [messages, activeFriendId]);
 
   return (
-    <div className="relative flex h-full w-full flex-col bg-[linear-gradient(180deg,#f9f1e5_0%,#f5ecde_100%)]">
+    <div className="relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-[linear-gradient(180deg,#f9f1e5_0%,#f5ecde_100%)]">
       <div className="z-10 flex shrink-0 items-center justify-between border-b border-[#eadfce] bg-white/85 p-4 backdrop-blur-md">
         <div className="flex items-center gap-3">
           <button
@@ -516,7 +516,7 @@ const Chat = ({
         </div>
       </div>
 
-      <div className="custom-scrollbar flex-1 overflow-y-auto bg-[radial-gradient(circle_at_top_right,rgba(217,184,140,0.18),transparent_24%),radial-gradient(circle_at_bottom_left,rgba(183,195,154,0.14),transparent_28%),linear-gradient(180deg,#f9f1e5_0%,#f5ecde_100%)] p-4 md:p-5">
+      <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto bg-[radial-gradient(circle_at_top_right,rgba(217,184,140,0.18),transparent_24%),radial-gradient(circle_at_bottom_left,rgba(183,195,154,0.14),transparent_28%),linear-gradient(180deg,#f9f1e5_0%,#f5ecde_100%)] p-4 md:p-5">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center text-[#7d7267]">
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-[0_12px_30px_rgba(122,92,56,0.08)]">
