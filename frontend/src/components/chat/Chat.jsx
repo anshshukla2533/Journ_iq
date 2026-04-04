@@ -145,6 +145,17 @@ const Chat = ({
   }, [activeFriendId]);
 
   useEffect(() => {
+    if (!activeFriendId) return;
+    try {
+      const key = 'chatUnreadCounts';
+      const next = JSON.parse(localStorage.getItem(key) || '{}');
+      delete next[activeFriendId];
+      localStorage.setItem(key, JSON.stringify(next));
+      window.dispatchEvent(new Event('storage'));
+    } catch {}
+  }, [activeFriendId, messages.length]);
+
+  useEffect(() => {
     setPresence({
       online: Boolean(friend?.online),
       lastSeen: friend?.lastLogin || null,
@@ -260,10 +271,11 @@ const Chat = ({
       const message = extract(payload);
       const tempId = payload?.tempId;
       if (!message) return;
+      const confirmedId = msgId(message);
 
       setMessages((prev) => {
         let replaced = false;
-        const next = prev.map((item) => {
+        let next = prev.map((item) => {
           if (item._id === tempId) {
             replaced = true;
             return { ...message, status: message.read ? 'read' : 'delivered' };
@@ -271,12 +283,27 @@ const Chat = ({
           return item;
         });
 
+        if (confirmedId) {
+          const deduped = [];
+          const seen = new Set();
+
+          next.forEach((item) => {
+            const itemId = msgId(item);
+            const dedupeKey = itemId || `${item._id || ''}:${item.createdAt || ''}:${item.content || item.text || ''}`;
+            if (seen.has(dedupeKey)) return;
+            seen.add(dedupeKey);
+            deduped.push(item);
+          });
+
+          next = deduped;
+          seenIds.current.add(confirmedId);
+        }
+
         if (!replaced) {
-          const id = msgId(message);
-          if (!(id && seenIds.current.has(id))) {
+          if (!(confirmedId && seenIds.current.has(confirmedId))) {
             next.push({ ...message, status: message.read ? 'read' : 'delivered' });
           }
-          if (id) seenIds.current.add(id);
+          if (confirmedId) seenIds.current.add(confirmedId);
         }
 
         if (cacheKey) {

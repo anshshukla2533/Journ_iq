@@ -30,6 +30,9 @@ const Friends = ({ onStartChat, onFriendsLoaded }) => {
   const [friendsLoading, setFriendsLoading] = useState(true);
   const [sendingTo, setSendingTo] = useState('');
   const [requestFeedback, setRequestFeedback] = useState(null);
+  const [unreadCounts, setUnreadCounts] = useState({});
+  const [recentMessages, setRecentMessages] = useState({});
+  const [typingUsers, setTypingUsers] = useState({});
 
   useEffect(() => {
     setAuthToken(token);
@@ -64,6 +67,22 @@ const Friends = ({ onStartChat, onFriendsLoaded }) => {
   }, [token]);
 
   useEffect(() => {
+    const syncLocalChatState = () => {
+      try {
+        setUnreadCounts(JSON.parse(localStorage.getItem('chatUnreadCounts') || '{}'));
+        setRecentMessages(JSON.parse(localStorage.getItem('chatRecents') || '{}'));
+      } catch {
+        setUnreadCounts({});
+        setRecentMessages({});
+      }
+    };
+
+    syncLocalChatState();
+    window.addEventListener('storage', syncLocalChatState);
+    return () => window.removeEventListener('storage', syncLocalChatState);
+  }, []);
+
+  useEffect(() => {
     if (!token) return;
 
     const socket = createSocket(token) || getSocket();
@@ -89,16 +108,30 @@ const Friends = ({ onStartChat, onFriendsLoaded }) => {
       );
     };
 
+    const handleTyping = ({ userId, typing }) => {
+      setTypingUsers((prev) => {
+        const next = { ...prev };
+        if (typing) {
+          next[String(userId)] = true;
+        } else {
+          delete next[String(userId)];
+        }
+        return next;
+      });
+    };
+
     socket.on('friend:online', handleOnline);
     socket.on('friend:offline', handleOffline);
     socket.on('user_online', handleOnline);
     socket.on('user_offline', handleOffline);
+    socket.on('user_typing', handleTyping);
 
     return () => {
       socket.off('friend:online', handleOnline);
       socket.off('friend:offline', handleOffline);
       socket.off('user_online', handleOnline);
       socket.off('user_offline', handleOffline);
+      socket.off('user_typing', handleTyping);
     };
   }, [token]);
 
@@ -369,7 +402,17 @@ const Friends = ({ onStartChat, onFriendsLoaded }) => {
               <li
                 key={(f.email || '') + '-' + (f._id || '')}
                 className="group flex cursor-pointer items-center justify-between rounded-2xl border border-transparent bg-white/50 p-3 transition hover:border-[#dbc3a4] hover:bg-white hover:shadow-[0_12px_30px_rgba(122,92,56,0.08)]"
-                onClick={() => onStartChat(f)}
+                onClick={() => {
+                  try {
+                    const key = 'chatUnreadCounts';
+                    const next = JSON.parse(localStorage.getItem(key) || '{}');
+                    delete next[String(f.id || f._id)];
+                    localStorage.setItem(key, JSON.stringify(next));
+                    setUnreadCounts(next);
+                    window.dispatchEvent(new Event('storage'));
+                  } catch {}
+                  onStartChat(f);
+                }}
               >
                 <div className="flex items-center gap-3">
                   <div className="relative">
@@ -381,15 +424,23 @@ const Friends = ({ onStartChat, onFriendsLoaded }) => {
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold text-[#2f2720]">{f.name || f.email}</span>
                     <span className="w-40 truncate text-xs text-[#8d8174]">
-                      {f.online ? 'Online now' : formatLastSeen(f.lastLogin)}
+                      {typingUsers[String(f.id || f._id)]
+                        ? 'typing...'
+                        : recentMessages[String(f.id || f._id)]?.lastText || (f.online ? 'Online now' : formatLastSeen(f.lastLogin))}
                     </span>
                   </div>
                 </div>
-                <div className="text-[#b88455] opacity-0 transition group-hover:opacity-100">
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                </div>
+                {unreadCounts[String(f.id || f._id)] ? (
+                  <div className="flex min-w-6 items-center justify-center rounded-full bg-[#7f9a5c] px-2 py-1 text-[11px] font-bold text-white shadow-sm">
+                    {unreadCounts[String(f.id || f._id)]}
+                  </div>
+                ) : (
+                  <div className="text-[#b88455] opacity-0 transition group-hover:opacity-100">
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </div>
+                )}
               </li>
             ))}
             {!friendsLoading && sortedFriends.length === 0 && (
