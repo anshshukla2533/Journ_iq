@@ -1,9 +1,7 @@
 import express from 'express';
 import axios from 'axios';
-import * as youtubeTranscriptPackage from 'youtube-transcript/dist/youtube-transcript.esm.js';
+import { YoutubeTranscript } from 'youtube-transcript';
 import { getCachedJson, setCachedJson } from '../lib/cache.js';
-
-const { YoutubeTranscript } = youtubeTranscriptPackage;
 
 const router = express.Router();
 
@@ -54,7 +52,28 @@ router.get('/transcript/:videoId', async (req, res) => {
       return res.json(cached);
     }
 
-    const transcript = await YoutubeTranscript.fetchTranscript(videoId, { lang: 'en' });
+    const languageAttempts = ['en', 'en-US', 'en-GB', undefined];
+    let transcript = null;
+
+    for (const lang of languageAttempts) {
+      try {
+        transcript = lang
+          ? await YoutubeTranscript.fetchTranscript(videoId, { lang })
+          : await YoutubeTranscript.fetchTranscript(videoId);
+
+        if (Array.isArray(transcript) && transcript.length) {
+          break;
+        }
+      } catch {}
+    }
+
+    if (!Array.isArray(transcript) || transcript.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Transcript is not available for this video',
+      });
+    }
+
     const text = transcript
       .map((segment) => segment.text?.trim())
       .filter(Boolean)
