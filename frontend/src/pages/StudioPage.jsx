@@ -625,10 +625,10 @@ ${aiQuestion}
                   <div>
                     <p className="text-sm font-semibold text-[#6a5a47]">Captions</p>
                     <p className="text-xs text-[#8f7d68]">
-                      {captionsStatus === 'loading'
-                        ? 'Fetching English transcript from YouTube...'
-                        : captionsStatus === 'unavailable'
-                          ? 'No English transcript came back for this video yet.'
+                        {captionsStatus === 'loading'
+                          ? 'Fetching transcript from YouTube...'
+                          : captionsStatus === 'unavailable'
+                            ? 'No transcript came back for this video yet.'
                           : noteCaptions.trim()
                             ? captionsEnabled
                               ? 'Formatted transcript headings will be saved with this note.'
